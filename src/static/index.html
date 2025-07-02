@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agente Investidor - Seu Mentor Financeiro</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Agente Investidor</span>
+                </div>
+                <nav class="nav">
+                    <a href="#home" class="nav-link active">Início</a>
+                    <a href="#analise" class="nav-link">Análise</a>
+                    <a href="#chat" class="nav-link">Chat</a>
+                    <a href="#metodologias" class="nav-link">Metodologias</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <!-- Home Section -->
+        <section id="home" class="section active">
+            <div class="container">
+                <div class="hero">
+                    <div class="hero-content">
+                        <h1 class="hero-title">
+                            Seu Mentor Pessoal em <span class="highlight">Investimentos</span>
+                        </h1>
+                        <p class="hero-description">
+                            Baseado nas metodologias dos maiores investidores do mundo como Warren Buffett, 
+                            Benjamin Graham, Peter Lynch e outros. Análise fundamentalista profissional 
+                            com dados em tempo real da B3 e mercados internacionais.
+                        </p>
+                        <div class="hero-actions">
+                            <button class="btn btn-primary" onclick="showSection('analise')">
+                                <i class="fas fa-chart-bar"></i>
+                                Analisar Ação
+                            </button>
+                            <button class="btn btn-secondary" onclick="showSection('chat')">
+                                <i class="fas fa-comments"></i>
+                                Chat com Agente
+                            </button>
+                        </div>
+                    </div>
+                    <div class="hero-stats">
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3>14</h3>
+                                <p>Grandes Investidores</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-brain"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3>5</h3>
+                                <p>Metodologias de Análise</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-globe"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3>B3 + Global</h3>
+                                <p>Mercados Cobertos</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Investidores Famosos -->
+                <div class="investors-section">
+                    <h2 class="section-title">Baseado nos Maiores Investidores</h2>
+                    <div class="investors-grid">
+                        <div class="investor-card">
+                            <div class="investor-avatar">
+                                <i class="fas fa-user-tie"></i>
+                            </div>
+                            <h3>Warren Buffett</h3>
+                            <p>Value Investing</p>
+                            <span class="investor-tag">Oráculo de Omaha</span>
+                        </div>
+                        <div class="investor-card">
+                            <div class="investor-avatar">
+                                <i class="fas fa-graduation-cap"></i>
+                            </div>
+                            <h3>Benjamin Graham</h3>
+                            <p>Pai do Value Investing</p>
+                            <span class="investor-tag">Margem de Segurança</span>
+                        </div>
+                        <div class="investor-card">
+                            <div class="investor-avatar">
+                                <i class="fas fa-rocket"></i>
+                            </div>
+                            <h3>Peter Lynch</h3>
+                            <p>Growth at Reasonable Price</p>
+                            <span class="investor-tag">PEG < 1</span>
+                        </div>
+                        <div class="investor-card">
+                            <div class="investor-avatar">
+                                <i class="fas fa-coins"></i>
+                            </div>
+                            <h3>Luiz Barsi</h3>
+                            <p>Rei dos Dividendos</p>
+                            <span class="investor-tag">Renda Passiva</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Análise Section -->
+        <section id="analise" class="section">
+            <div class="container">
+                <h2 class="section-title">Análise de Ações</h2>
+                
+                <div class="analysis-form">
+                    <div class="form-group">
+                        <label for="stock-symbol">Símbolo da Ação</label>
+                        <input type="text" id="stock-symbol" placeholder="Ex: PETR4.SA, AAPL, VALE3.SA" class="form-input">
+                        <small class="form-hint">Para ações brasileiras, adicione .SA (ex: PETR4.SA)</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="methodology">Metodologia de Análise</label>
+                        <select id="methodology" class="form-select">
+                            <option value="warren_buffett">Warren Buffett - Value Investing</option>
+                            <option value="benjamin_graham">Benjamin Graham - Defensive Value</option>
+                            <option value="peter_lynch">Peter Lynch - Growth at Reasonable Price</option>
+                            <option value="dividendos">Foco em Dividendos - Barsi/Weiss</option>
+                        </select>
+                    </div>
+                    
+                    <button class="btn btn-primary btn-analyze" onclick="analyzeStock()">
+                        <i class="fas fa-search"></i>
+                        Analisar Ação
+                    </button>
+                </div>
+
+                <!-- Resultados da Análise -->
+                <div id="analysis-results" class="analysis-results" style="display: none;">
+                    <div class="result-header">
+                        <h3 id="result-symbol"></h3>
+                        <div class="result-score">
+                            <span id="result-score-value"></span>
+                            <span class="score-label">/100</span>
+                        </div>
+                    </div>
+                    
+                    <div class="result-recommendation">
+                        <span id="result-recommendation" class="recommendation-badge"></span>
+                    </div>
+                    
+                    <div class="result-details">
+                        <div class="detail-section">
+                            <h4><i class="fas fa-thumbs-up"></i> Pontos Fortes</h4>
+                            <ul id="result-strengths"></ul>
+                        </div>
+                        
+                        <div class="detail-section">
+                            <h4><i class="fas fa-exclamation-triangle"></i> Pontos de Atenção</h4>
+                            <ul id="result-weaknesses"></ul>
+                        </div>
+                    </div>
+                    
+                    <div class="result-footer">
+                        <div class="result-info">
+                            <span><strong>Metodologia:</strong> <span id="result-methodology"></span></span>
+                            <span><strong>Preço Atual:</strong> R$ <span id="result-current-price"></span></span>
+                            <span id="result-target-price" style="display: none;"><strong>Preço Alvo:</strong> R$ <span id="target-price-value"></span></span>
+                        </div>
+                        <p id="result-justification" class="result-justification"></p>
+                    </div>
+                </div>
+
+                <!-- Loading -->
+                <div id="analysis-loading" class="loading" style="display: none;">
+                    <div class="loading-spinner"></div>
+                    <p>Analisando ação...</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Chat Section -->
+        <section id="chat" class="section">
+            <div class="container">
+                <h2 class="section-title">Chat com o Agente Investidor</h2>
+                
+                <div class="chat-container">
+                    <div class="chat-messages" id="chat-messages">
+                        <div class="message agent-message">
+                            <div class="message-avatar">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <div class="message-content">
+                                <p>Olá! Sou seu agente investidor pessoal. Como posso ajudá-lo hoje?</p>
+                                <div class="message-suggestions">
+                                    <button class="suggestion-btn" onclick="sendMessage('Como Warren Buffett analisa ações?')">
+                                        Como Warren Buffett analisa ações?
+                                    </button>
+                                    <button class="suggestion-btn" onclick="sendMessage('O que é P/E ratio?')">
+                                        O que é P/E ratio?
+                                    </button>
+                                    <button class="suggestion-btn" onclick="sendMessage('Como começar a investir?')">
+                                        Como começar a investir?
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="chat-input-container">
+                        <div class="chat-input-wrapper">
+                            <input type="text" id="chat-input" placeholder="Digite sua pergunta sobre investimentos..." class="chat-input">
+                            <button class="chat-send-btn" onclick="sendChatMessage()">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Metodologias Section -->
+        <section id="metodologias" class="section">
+            <div class="container">
+                <h2 class="section-title">Metodologias de Investimento</h2>
+                
+                <div class="methodologies-grid">
+                    <div class="methodology-card">
+                        <div class="methodology-header">
+                            <h3>Warren Buffett</h3>
+                            <span class="methodology-type">Value Investing</span>
+                        </div>
+                        <div class="methodology-content">
+                            <p>Foco em empresas com vantagem competitiva sustentável, gestão de qualidade e preço razoável.</p>
+                            <div class="methodology-indicators">
+                                <span class="indicator">P/E < 25</span>
+                                <span class="indicator">ROE > 15%</span>
+                                <span class="indicator">D/E < 0.5</span>
+                                <span class="indicator">FCF Positivo</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="methodology-card">
+                        <div class="methodology-header">
+                            <h3>Benjamin Graham</h3>
+                            <span class="methodology-type">Defensive Value</span>
+                        </div>
+                        <div class="methodology-content">
+                            <p>Segurança do principal e margem de segurança são prioridades absolutas.</p>
+                            <div class="methodology-indicators">
+                                <span class="indicator">P/E < 15</span>
+                                <span class="indicator">P/B < 1.5</span>
+                                <span class="indicator">Current Ratio > 2</span>
+                                <span class="indicator">Margem Segurança</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="methodology-card">
+                        <div class="methodology-header">
+                            <h3>Peter Lynch</h3>
+                            <span class="methodology-type">Growth at Reasonable Price</span>
+                        </div>
+                        <div class="methodology-content">
+                            <p>Invista no que você conhece e busque crescimento a preço razoável.</p>
+                            <div class="methodology-indicators">
+                                <span class="indicator">PEG < 1</span>
+                                <span class="indicator">Crescimento > 15%</span>
+                                <span class="indicator">Empresas Conhecidas</span>
+                                <span class="indicator">Small Caps</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="methodology-card">
+                        <div class="methodology-header">
+                            <h3>Foco em Dividendos</h3>
+                            <span class="methodology-type">Income Investing</span>
+                        </div>
+                        <div class="methodology-content">
+                            <p>Geração de renda passiva através de dividendos consistentes e crescentes.</p>
+                            <div class="methodology-indicators">
+                                <span class="indicator">DY > 4%</span>
+                                <span class="indicator">Payout < 80%</span>
+                                <span class="indicator">ROE > 12%</span>
+                                <span class="indicator">Histórico Consistente</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>Agente Investidor</h4>
+                    <p>Seu mentor pessoal baseado nas metodologias dos maiores investidores do mundo.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Recursos</h4>
+                    <ul>
+                        <li><a href="#analise">Análise de Ações</a></li>
+                        <li><a href="#chat">Chat Inteligente</a></li>
+                        <li><a href="#metodologias">Metodologias</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Dados</h4>
+                    <ul>
+                        <li>B3 - Bolsa do Brasil</li>
+                        <li>Yahoo Finance</li>
+                        <li>Dados em Tempo Real</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Agente Investidor. Desenvolvido por Luiz Gustavo Finotello.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
+
