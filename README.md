@@ -183,11 +183,6 @@ Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para ma
 - Email: finotello22@hotmail.com
 - GitHub: [@LuizGustavoVJ](https://github.com/LuizGustavoVJ)
 
-## 🙏 Agradecimentos
-
-- Warren Buffett, Benjamin Graham, Peter Lynch e outros grandes investidores pelas metodologias
-- Comunidade open source pelas ferramentas utilizadas
-- APIs financeiras que fornecem dados em tempo real
 
 ---
 
