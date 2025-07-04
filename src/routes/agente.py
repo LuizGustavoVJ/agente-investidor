@@ -1,36 +1,43 @@
 from flask import Blueprint, jsonify, request
 from flask_cors import cross_origin
-import sys
-import os
-sys.path.append('/opt/.manus/.sandbox-runtime')
+import requests
+import json
+from datetime import datetime
 
 from src.models.investidor import MetodologiasInvestimento, TipoInvestidor
 from src.models.analise_financeira import AnaliseFinanceira, DadosFinanceiros, AnaliseResultado
-from data_api import ApiClient
+from src.data import (
+    INVESTIDORES_PERFIS, 
+    CHAT_MENSAGENS, 
+    CHAT_RESPOSTAS, 
+    APIConfig,
+    get_simulated_data,
+    is_brazilian_stock,
+    format_currency,
+    calculate_score_range,
+    get_all_investors
+)
 
 agente_bp = Blueprint('agente', __name__)
-
-# Inicializar cliente da API
-api_client = ApiClient()
 
 @agente_bp.route('/perfis-investidores', methods=['GET'])
 @cross_origin()
 def get_perfis_investidores():
     """Retorna todos os perfis de investidores disponíveis"""
     try:
-        perfis = MetodologiasInvestimento.get_perfis_investidores()
+        perfis = get_all_investors()
         perfis_dict = {}
         
         for key, perfil in perfis.items():
             perfis_dict[key] = {
                 'nome': perfil.nome,
-                'tipo': perfil.tipo.value,
+                'tipo': perfil.tipo,
                 'metodologia': perfil.metodologia,
                 'foco_principal': perfil.foco_principal,
                 'indicadores_chave': perfil.indicadores_chave,
-                'exemplos_investimentos': perfil.exemplos_investimentos,
                 'sites_recomendados': perfil.sites_recomendados,
-                'livros_recomendados': perfil.livros_recomendados
+                'livros_recomendados': perfil.livros_recomendados,
+                'biografia_resumo': perfil.biografia_resumo
             }
         
         return jsonify({
