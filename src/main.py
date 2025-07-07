@@ -5,12 +5,20 @@ from flask import (
 )
 from flask_cors import CORS
 from flask_migrate import Migrate
-from models.acao import db
-from routes.user import user_bp
-from routes.agente import agente_bp
 
-# DON'T CHANGE THIS !!!
+# Adicionar o diretório pai ao path para imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+
+try:
+    # Tentar imports relativos primeiro (quando executado diretamente)
+    from models.acao import db
+    from routes.user import user_bp
+    from routes.agente import agente_bp
+except ImportError:
+    # Se falhar, usar imports absolutos (quando executado como módulo)
+    from src.models.acao import db
+    from src.routes.user import user_bp
+    from src.routes.agente import agente_bp
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 db_path = os.path.join(basedir, 'database', 'app.db')
