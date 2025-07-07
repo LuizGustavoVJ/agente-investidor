@@ -17,6 +17,10 @@ from src.data import (
     calculate_score_range,
     get_all_investors
 )
+from src.data_api import ApiClient
+from src.models.acao import Acao, db
+
+api_client = ApiClient()
 
 agente_bp = Blueprint('agente', __name__)
 
@@ -131,12 +135,24 @@ def get_dados_acao(symbol):
             insights = None
         
         # Processar dados
+        profile_dict = profile if isinstance(profile, dict) else {}
+        chart_dict = chart if isinstance(chart, dict) else {}
+        insights_dict = insights if isinstance(insights, dict) else {}
+        chart_result = []
+        chart_meta = {}
+        if isinstance(chart_dict.get('chart', {}), dict):
+            result_list = chart_dict.get('chart', {}).get('result', [])
+            if isinstance(result_list, list) and result_list and isinstance(result_list[0], dict):
+                chart_result = result_list
+                chart_meta = chart_result[0].get('meta', {}) if isinstance(chart_result[0], dict) else {}
         dados_processados = {
             'symbol': symbol.upper(),
-            'profile': profile,
-            'chart': chart,
-            'insights': insights,
-            'region': region
+            'profile': profile_dict,
+            'chart': chart_dict,
+            'insights': insights_dict,
+            'region': region,
+            'preco_atual': chart_meta.get('regularMarketPrice') if isinstance(chart_meta, dict) else None,
+            'market_cap': chart_meta.get('marketCap') if isinstance(chart_meta, dict) else None
         }
         
         return jsonify({
@@ -177,22 +193,27 @@ def analisar_acao():
                 'range': '1mo'
             })
             
-            if not chart or 'chart' not in chart or not chart['chart']['result']:
+            chart_result = []
+            result = {}
+            meta = {}
+            if isinstance(chart, dict) and isinstance(chart.get('chart', {}), dict):
+                result_list = chart.get('chart', {}).get('result', [])
+                if isinstance(result_list, list) and result_list and isinstance(result_list[0], dict):
+                    chart_result = result_list
+                    result = chart_result[0]
+                    meta = result.get('meta', {}) if isinstance(result, dict) else {}
+            if not chart_result:
                 raise Exception("Não foi possível obter dados da ação")
-            
-            result = chart['chart']['result'][0]
-            meta = result['meta']
-            
             # Extrair dados básicos
-            price = meta.get('regularMarketPrice', 0)
-            market_cap = meta.get('marketCap')
+            price = float(meta.get('regularMarketPrice', 0) or 0) if isinstance(meta, dict) else 0.0
+            market_cap = float(meta.get('marketCap', 0) or 0) if isinstance(meta, dict) else 0.0
             
             # Criar objeto DadosFinanceiros com dados disponíveis
             # Nota: Alguns dados podem não estar disponíveis via API gratuita
             dados_financeiros = DadosFinanceiros(
                 symbol=symbol,
                 price=price,
-                market_cap=market_cap or 0,
+                market_cap=market_cap,
                 # Dados que precisariam ser obtidos de outras fontes ou calculados
                 pe_ratio=data.get('pe_ratio'),
                 pb_ratio=data.get('pb_ratio'),
@@ -316,24 +337,30 @@ def get_recomendacoes_mercado():
                     'range': '1mo'
                 })
                 
-                if chart and 'chart' in chart and chart['chart']['result']:
-                    result = chart['chart']['result'][0]
-                    meta = result['meta']
-                    
+                chart_result = []
+                result = {}
+                meta = {}
+                if isinstance(chart, dict) and isinstance(chart.get('chart', {}), dict):
+                    result_list = chart.get('chart', {}).get('result', [])
+                    if isinstance(result_list, list) and result_list and isinstance(result_list[0], dict):
+                        chart_result = result_list
+                        result = chart_result[0]
+                        meta = result.get('meta', {}) if isinstance(result, dict) else {}
+                if chart_result:
                     # Calcular variação recente
-                    timestamps = result.get('timestamp', [])
-                    quotes = result.get('indicators', {}).get('quote', [{}])[0]
-                    closes = quotes.get('close', [])
-                    
+                    timestamps = result.get('timestamp', []) if isinstance(result, dict) else []
+                    indicators = result.get('indicators', {}) if isinstance(result, dict) else {}
+                    quotes = indicators.get('quote', [{}]) if isinstance(indicators, dict) else [{}]
+                    quotes0 = quotes[0] if isinstance(quotes, list) and quotes and isinstance(quotes[0], dict) else {}
+                    closes = quotes0.get('close', []) if isinstance(quotes0, dict) else []
                     if len(closes) >= 2:
                         variacao = ((closes[-1] - closes[0]) / closes[0]) * 100
-                        
                         recomendacoes.append({
                             'symbol': symbol,
-                            'nome': meta.get('longName', symbol),
-                            'preco_atual': meta.get('regularMarketPrice'),
+                            'nome': meta.get('longName', symbol) if isinstance(meta, dict) else symbol,
+                            'preco_atual': meta.get('regularMarketPrice') if isinstance(meta, dict) else None,
                             'variacao_periodo': round(variacao, 2),
-                            'volume': meta.get('regularMarketVolume'),
+                            'volume': meta.get('regularMarketVolume') if isinstance(meta, dict) else None,
                             'status': 'alta' if variacao > 5 else 'baixa' if variacao < -5 else 'estavel'
                         })
             except:
@@ -353,6 +380,13 @@ def get_recomendacoes_mercado():
             'success': False,
             'error': str(e)
         }), 500
+
+@agente_bp.route('/acoes-disponiveis', methods=['GET'])
+@cross_origin()
+def get_acoes_disponiveis():
+    """Retorna a lista de ações disponíveis para análise (todas do banco)"""
+    acoes = Acao.query.all()
+    return jsonify({'success': True, 'acoes': [a.to_dict() for a in acoes]})
 
 def processar_mensagem_chat(mensagem: str, contexto: dict) -> str:
     """Processa mensagem do chat e gera resposta do agente"""
