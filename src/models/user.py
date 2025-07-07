@@ -1,4 +1,4 @@
-from src.models.acao import db
+from .acao import db
 from werkzeug.security import generate_password_hash, check_password_hash
 
 

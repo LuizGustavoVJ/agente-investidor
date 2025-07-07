@@ -7,6 +7,11 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
     <script src="https://kit.fontawesome.com/1c2e7e2e2e.js" crossorigin="anonymous"></script>
+    <!-- Chart.js para gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chart.js plugins para funcionalidades avançadas -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom"></script>
 </head>
 <body>
     <header class="header">
@@ -16,6 +21,7 @@
             </div>
             <nav class="nav">
                 <a href="#" class="nav-link" onclick="showSection('home')">Home</a>
+                <a href="#" class="nav-link" onclick="showSection('dashboard')">Dashboard</a>
                 <a href="#" class="nav-link" onclick="showSection('analise')">Análise</a>
                 <a href="#" class="nav-link" onclick="showSection('chat')">Chat</a>
                 <a href="#" class="nav-link" onclick="showSection('metodologias')">Metodologias</a>
@@ -127,6 +133,177 @@
             </div>
         </section>
 
+        <!-- Dashboard Section -->
+        <section id="dashboard" class="section">
+            <div class="container">
+                <h2 class="section-title">Dashboard de Mercado</h2>
+                
+                <!-- Resumo do Mercado -->
+                <div class="market-summary">
+                    <div class="summary-cards">
+                        <div class="summary-card">
+                            <div class="card-icon">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div class="card-content">
+                                <h3 id="ibovespa-value">Loading...</h3>
+                                <p>Ibovespa</p>
+                                <span id="ibovespa-change" class="change-indicator">+0.00%</span>
+                            </div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="card-icon">
+                                <i class="fas fa-dollar-sign"></i>
+                            </div>
+                            <div class="card-content">
+                                <h3 id="dolar-value">Loading...</h3>
+                                <p>USD/BRL</p>
+                                <span id="dolar-change" class="change-indicator">+0.00%</span>
+                            </div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="card-icon">
+                                <i class="fas fa-percentage"></i>
+                            </div>
+                            <div class="card-content">
+                                <h3 id="selic-value">Loading...</h3>
+                                <p>Taxa Selic</p>
+                                <span class="change-indicator">a.a.</span>
+                            </div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="card-icon">
+                                <i class="fas fa-fire"></i>
+                            </div>
+                            <div class="card-content">
+                                <h3 id="volume-value">Loading...</h3>
+                                <p>Volume B3</p>
+                                <span class="change-indicator">bilhões</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gráficos Principais -->
+                <div class="dashboard-charts">
+                    <div class="chart-row">
+                        <div class="chart-container">
+                            <div class="chart-header">
+                                <h3>Ibovespa - Últimos 30 dias</h3>
+                                <div class="chart-controls">
+                                    <button class="chart-btn active" onclick="updateIbovespaChart('1M')">1M</button>
+                                    <button class="chart-btn" onclick="updateIbovespaChart('3M')">3M</button>
+                                    <button class="chart-btn" onclick="updateIbovespaChart('6M')">6M</button>
+                                    <button class="chart-btn" onclick="updateIbovespaChart('1Y')">1A</button>
+                                </div>
+                            </div>
+                            <canvas id="ibovespaChart"></canvas>
+                        </div>
+                        <div class="chart-container">
+                            <div class="chart-header">
+                                <h3>Setores em Destaque</h3>
+                                <div class="chart-controls">
+                                    <button class="chart-btn active" onclick="updateSectorChart('performance')">Performance</button>
+                                    <button class="chart-btn" onclick="updateSectorChart('volume')">Volume</button>
+                                </div>
+                            </div>
+                            <canvas id="sectorChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-row">
+                        <div class="chart-container">
+                            <div class="chart-header">
+                                <h3>Top Ações - Maiores Altas</h3>
+                                <div class="chart-controls">
+                                    <button class="chart-btn active" onclick="updateTopStocks('gainers')">Altas</button>
+                                    <button class="chart-btn" onclick="updateTopStocks('losers')">Baixas</button>
+                                    <button class="chart-btn" onclick="updateTopStocks('volume')">Volume</button>
+                                </div>
+                            </div>
+                            <canvas id="topStocksChart"></canvas>
+                        </div>
+                        <div class="chart-container">
+                            <div class="chart-header">
+                                <h3>Análise de Volatilidade</h3>
+                                <div class="chart-controls">
+                                    <button class="chart-btn active" onclick="updateVolatilityChart('daily')">Diária</button>
+                                    <button class="chart-btn" onclick="updateVolatilityChart('weekly')">Semanal</button>
+                                </div>
+                            </div>
+                            <canvas id="volatilityChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabela de Ações em Destaque -->
+                <div class="featured-stocks">
+                    <div class="table-header">
+                        <h3>Ações em Destaque</h3>
+                        <div class="table-controls">
+                            <button class="table-btn active" onclick="updateFeaturedStocks('recommended')">Recomendadas</button>
+                            <button class="table-btn" onclick="updateFeaturedStocks('trending')">Em Alta</button>
+                            <button class="table-btn" onclick="updateFeaturedStocks('dividends')">Dividendos</button>
+                        </div>
+                    </div>
+                    <div class="stocks-table-container">
+                        <table class="stocks-table" id="featuredStocksTable">
+                            <thead>
+                                <tr>
+                                    <th>Ação</th>
+                                    <th>Preço</th>
+                                    <th>Variação</th>
+                                    <th>Volume</th>
+                                    <th>P/E</th>
+                                    <th>Div. Yield</th>
+                                    <th>Score</th>
+                                    <th>Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody id="featuredStocksBody">
+                                <!-- Dados serão carregados via JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Indicadores Econômicos -->
+                <div class="economic-indicators">
+                    <h3>Indicadores Econômicos</h3>
+                    <div class="indicators-grid">
+                        <div class="indicator-card">
+                            <div class="indicator-header">
+                                <h4>IPCA (Inflação)</h4>
+                                <span id="ipca-value" class="indicator-value">Loading...</span>
+                            </div>
+                            <canvas id="ipcaChart" class="mini-chart"></canvas>
+                        </div>
+                        <div class="indicator-card">
+                            <div class="indicator-header">
+                                <h4>PIB</h4>
+                                <span id="pib-value" class="indicator-value">Loading...</span>
+                            </div>
+                            <canvas id="pibChart" class="mini-chart"></canvas>
+                        </div>
+                        <div class="indicator-card">
+                            <div class="indicator-header">
+                                <h4>Desemprego</h4>
+                                <span id="unemployment-value" class="indicator-value">Loading...</span>
+                            </div>
+                            <canvas id="unemploymentChart" class="mini-chart"></canvas>
+                        </div>
+                        <div class="indicator-card">
+                            <div class="indicator-header">
+                                <h4>Commodities</h4>
+                                <span id="commodities-value" class="indicator-value">Loading...</span>
+                            </div>
+                            <canvas id="commoditiesChart" class="mini-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- Análise Section -->
         <section id="analise" class="section">
             <div class="container">
@@ -190,6 +367,147 @@
                             <span id="result-target-price" style="display: none;"><strong>Preço Alvo:</strong> R$ <span id="target-price-value"></span></span>
                         </div>
                         <p id="result-justification" class="result-justification"></p>
+                    </div>
+                </div>
+
+                <!-- Gráficos da Ação Analisada -->
+                <div id="stock-charts" class="stock-charts" style="display: none;">
+                    <h3>Análise Gráfica - <span id="chart-stock-symbol"></span></h3>
+                    
+                    <div class="analysis-charts">
+                        <div class="chart-row">
+                            <div class="chart-container">
+                                <div class="chart-header">
+                                    <h4>Histórico de Preços</h4>
+                                    <div class="chart-controls">
+                                        <button class="chart-btn active" onclick="updateStockChart('1M')">1M</button>
+                                        <button class="chart-btn" onclick="updateStockChart('3M')">3M</button>
+                                        <button class="chart-btn" onclick="updateStockChart('6M')">6M</button>
+                                        <button class="chart-btn" onclick="updateStockChart('1Y')">1A</button>
+                                        <button class="chart-btn" onclick="updateStockChart('2Y')">2A</button>
+                                    </div>
+                                </div>
+                                <canvas id="stockPriceChart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <div class="chart-row">
+                            <div class="chart-container">
+                                <div class="chart-header">
+                                    <h4>Volume de Negociação</h4>
+                                </div>
+                                <canvas id="stockVolumeChart"></canvas>
+                            </div>
+                            <div class="chart-container">
+                                <div class="chart-header">
+                                    <h4>Indicadores Técnicos</h4>
+                                    <div class="chart-controls">
+                                        <button class="chart-btn active" onclick="updateTechnicalChart('rsi')">RSI</button>
+                                        <button class="chart-btn" onclick="updateTechnicalChart('macd')">MACD</button>
+                                        <button class="chart-btn" onclick="updateTechnicalChart('bollinger')">Bollinger</button>
+                                    </div>
+                                </div>
+                                <canvas id="technicalChart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <div class="chart-row">
+                            <div class="chart-container">
+                                <div class="chart-header">
+                                    <h4>Comparação com Índices</h4>
+                                    <div class="chart-controls">
+                                        <button class="chart-btn active" onclick="updateComparisonChart('ibovespa')">Ibovespa</button>
+                                        <button class="chart-btn" onclick="updateComparisonChart('sector')">Setor</button>
+                                        <button class="chart-btn" onclick="updateComparisonChart('peers')">Concorrentes</button>
+                                    </div>
+                                </div>
+                                <canvas id="comparisonChart"></canvas>
+                            </div>
+                            <div class="chart-container">
+                                <div class="chart-header">
+                                    <h4>Análise Fundamentalista</h4>
+                                </div>
+                                <canvas id="fundamentalsChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Métricas Detalhadas -->
+                    <div class="detailed-metrics">
+                        <h4>Métricas Detalhadas</h4>
+                        <div class="metrics-grid">
+                            <div class="metric-card">
+                                <h5>Valuation</h5>
+                                <div class="metric-item">
+                                    <span>P/E Ratio:</span>
+                                    <span id="metric-pe">-</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span>P/B Ratio:</span>
+                                    <span id="metric-pb">-</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span>PEG Ratio:</span>
+                                    <span id="metric-peg">-</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span>EV/EBITDA:</span>
+                                    <span id="metric-ev-ebitda">-</span>
+                                </div>
+                            </div>
+                            
+                            <div class="metric-card">
+                                <h5>Rentabilidade</h5>
+                                <div class="metric-item">
+                                    <span>ROE:</span>
+                                    <span id="metric-roe">-</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span>ROA:</span>
+                                    <span id="metric-roa">-</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span>ROIC:</span>
+                                    <span id="metric-roic">-</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span>Margem Líquida:</span>
+                                    <span id="metric-margin">-</span>
+                                </div>
+                            </div>
+                            
+                            <div class="metric-card">
+                                <h5>Endividamento</h5>
+                                <div class="metric-item">
+                                    <span>Dívida/Patrimônio:</span>
+                                    <span id="metric-debt-equity">-</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span>Liquidez Corrente:</span>
+                                    <span id="metric-current-ratio">-</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span>Dívida Líquida/EBITDA:</span>
+                                    <span id="metric-net-debt-ebitda">-</span>
+                                </div>
+                            </div>
+                            
+                            <div class="metric-card">
+                                <h5>Crescimento</h5>
+                                <div class="metric-item">
+                                    <span>Crescimento Receita:</span>
+                                    <span id="metric-revenue-growth">-</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span>Crescimento Lucro:</span>
+                                    <span id="metric-earnings-growth">-</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span>Dividend Yield:</span>
+                                    <span id="metric-dividend-yield">-</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
