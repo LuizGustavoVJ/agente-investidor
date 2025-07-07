@@ -770,3 +770,116 @@ body {
     color: #aaa;
 }
 
+/* Modal de Login/Registro */
+.modal {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+.modal-content {
+  background: #fff;
+  border-radius: 16px;
+  padding: 2.5rem 2rem;
+  min-width: 320px;
+  max-width: 90vw;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  text-align: center;
+}
+#auth-modal-title {
+  color: #667eea;
+  margin-bottom: 1.5rem;
+}
+#auth-form .form-group label {
+  color: #222;
+}
+#auth-form .form-input {
+  color: #222;
+  background: #f7f7f7;
+  border: 1px solid #ddd;
+}
+#auth-form .form-input:focus {
+  border-color: #667eea;
+  background: #fff;
+}
+#auth-submit-btn {
+  margin-top: 1rem;
+}
+#auth-toggle-text {
+  margin-top: 1rem;
+}
+#auth-error-msg {
+  margin-top: 0.5rem;
+}
+
+/* Destaque para mensagens de erro/sucesso em formulários de login/cadastro */
+.msg-destaque {
+  font-size: 1.15rem;
+  font-weight: bold;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+#login-error-msg, #cadastro-error-msg {
+  color: #ef4444;
+}
+#cadastro-success-msg {
+  color: #10b981;
+}
+.toggle-password {
+  position: absolute;
+  right: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #888;
+  font-size: 1.2rem;
+  z-index: 2;
+}
+.toggle-password:hover {
+  color: #667eea;
+}
+
+.user-menu {
+  display: inline-block;
+  position: relative;
+}
+.user-info {
+  font-weight: bold;
+  color: #667eea;
+  background: #fff;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  margin-left: 1rem;
+  transition: background 0.2s;
+}
+.user-info:hover {
+  background: #f0f0f0;
+}
+.user-dropdown {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 110%;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  min-width: 120px;
+  z-index: 100;
+  padding: 0.5rem 0;
+}
+.user-dropdown a {
+  color: #ef4444;
+  padding: 0.5rem 1rem;
+  display: block;
+  text-align: left;
+  border-radius: 6px;
+  text-decoration: none;
+}
+.user-dropdown a:hover {
+  background: #f8f8f8;
+}
+

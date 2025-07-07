@@ -19,10 +19,11 @@ from src.data import (
 )
 from src.data_api import ApiClient
 from src.models.acao import Acao, db
+from src.routes.user import require_oauth
 
 api_client = ApiClient()
 
-agente_bp = Blueprint('agente', __name__)
+agente_bp = Blueprint('agente', __name__, url_prefix='/api/agente')
 
 @agente_bp.route('/perfis-investidores', methods=['GET'])
 @cross_origin()
@@ -98,6 +99,7 @@ def get_indicadores_por_tipo(tipo):
 
 @agente_bp.route('/dados-acao/<symbol>', methods=['GET'])
 @cross_origin()
+@require_oauth()
 def get_dados_acao(symbol):
     """Obtém dados de uma ação usando as APIs financeiras"""
     try:
@@ -168,6 +170,7 @@ def get_dados_acao(symbol):
 
 @agente_bp.route('/analisar-acao', methods=['POST'])
 @cross_origin()
+@require_oauth()
 def analisar_acao():
     """Analisa uma ação usando as metodologias dos grandes investidores"""
     try:
@@ -288,6 +291,7 @@ def analisar_acao():
 
 @agente_bp.route('/chat', methods=['POST'])
 @cross_origin()
+@require_oauth()
 def chat_agente():
     """Chat com o agente investidor"""
     try:
@@ -320,6 +324,7 @@ def chat_agente():
 
 @agente_bp.route('/recomendacoes-mercado', methods=['GET'])
 @cross_origin()
+@require_oauth()
 def get_recomendacoes_mercado():
     """Obtém recomendações gerais do mercado"""
     try:
@@ -383,6 +388,7 @@ def get_recomendacoes_mercado():
 
 @agente_bp.route('/acoes-disponiveis', methods=['GET'])
 @cross_origin()
+@require_oauth()
 def get_acoes_disponiveis():
     """Retorna a lista de ações disponíveis para análise (todas do banco)"""
     acoes = Acao.query.all()
