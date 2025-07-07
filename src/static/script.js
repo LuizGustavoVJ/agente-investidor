@@ -137,6 +137,11 @@ async function analyzeStock() {
         // Mostrar resultados
         displayAnalysisResults(analysisData);
         
+        // Inicializar gráficos da análise
+        setTimeout(() => {
+            initializeStockAnalysisCharts(symbol);
+        }, 500);
+        
     } catch (error) {
         console.error('Erro na análise:', error);
         alert('Erro ao analisar a ação. Verifique o símbolo e tente novamente.');
@@ -694,4 +699,856 @@ document.addEventListener('DOMContentLoaded', function() {
     updateUserMenu();
     // ... restante da inicialização modular ...
 });
+
+
+
+// ===== DASHBOARD FUNCTIONALITY =====
+
+// Variáveis globais para os gráficos
+let ibovespaChart = null;
+let sectorChart = null;
+let topStocksChart = null;
+let volatilityChart = null;
+let stockPriceChart = null;
+let stockVolumeChart = null;
+let technicalChart = null;
+let comparisonChart = null;
+let fundamentalsChart = null;
+let miniCharts = {};
+
+// Inicializar Dashboard
+function initializeDashboard() {
+    loadMarketSummary();
+    initializeCharts();
+    loadFeaturedStocks();
+    loadEconomicIndicators();
+}
+
+// Carregar resumo do mercado
+async function loadMarketSummary() {
+    try {
+        // Simular dados do mercado (em produção, viria de APIs reais)
+        const marketData = {
+            ibovespa: { value: 126543, change: 1.25 },
+            dolar: { value: 5.18, change: -0.45 },
+            selic: { value: 11.75 },
+            volume: { value: 18.5 }
+        };
+
+        // Atualizar valores na interface
+        document.getElementById('ibovespa-value').textContent = marketData.ibovespa.value.toLocaleString('pt-BR');
+        document.getElementById('ibovespa-change').textContent = `${marketData.ibovespa.change > 0 ? '+' : ''}${marketData.ibovespa.change}%`;
+        document.getElementById('ibovespa-change').className = `change-indicator ${marketData.ibovespa.change > 0 ? 'positive' : 'negative'}`;
+
+        document.getElementById('dolar-value').textContent = `R$ ${marketData.dolar.value.toFixed(2)}`;
+        document.getElementById('dolar-change').textContent = `${marketData.dolar.change > 0 ? '+' : ''}${marketData.dolar.change}%`;
+        document.getElementById('dolar-change').className = `change-indicator ${marketData.dolar.change > 0 ? 'positive' : 'negative'}`;
+
+        document.getElementById('selic-value').textContent = `${marketData.selic.value}%`;
+        document.getElementById('volume-value').textContent = `R$ ${marketData.volume.value}`;
+
+    } catch (error) {
+        console.error('Erro ao carregar resumo do mercado:', error);
+    }
+}
+
+// Inicializar todos os gráficos
+function initializeCharts() {
+    initializeIbovespaChart();
+    initializeSectorChart();
+    initializeTopStocksChart();
+    initializeVolatilityChart();
+    initializeEconomicCharts();
+}
+
+// Gráfico do Ibovespa
+function initializeIbovespaChart() {
+    const ctx = document.getElementById('ibovespaChart');
+    if (!ctx) return;
+
+    // Dados simulados do Ibovespa (últimos 30 dias)
+    const labels = [];
+    const data = [];
+    const baseValue = 126000;
+    
+    for (let i = 29; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        labels.push(date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }));
+        
+        // Simular variação do índice
+        const variation = (Math.random() - 0.5) * 2000;
+        data.push(baseValue + variation + (Math.random() * 3000));
+    }
+
+    ibovespaChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Ibovespa',
+                data: data,
+                borderColor: '#667eea',
+                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: false,
+                    ticks: {
+                        callback: function(value) {
+                            return value.toLocaleString('pt-BR');
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Gráfico de Setores
+function initializeSectorChart() {
+    const ctx = document.getElementById('sectorChart');
+    if (!ctx) return;
+
+    const sectors = ['Bancos', 'Petróleo', 'Mineração', 'Varejo', 'Tecnologia', 'Energia'];
+    const performance = [2.5, 1.8, -0.5, 3.2, 4.1, 1.2];
+
+    sectorChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: sectors,
+            datasets: [{
+                label: 'Performance (%)',
+                data: performance,
+                backgroundColor: performance.map(val => val > 0 ? '#16a34a' : '#dc2626'),
+                borderRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return value + '%';
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Gráfico Top Ações
+function initializeTopStocksChart() {
+    const ctx = document.getElementById('topStocksChart');
+    if (!ctx) return;
+
+    const stocks = ['PETR4', 'VALE3', 'ITUB4', 'BBDC4', 'ABEV3'];
+    const gains = [5.2, 3.8, 2.1, 4.5, 1.9];
+
+    topStocksChart = new Chart(ctx, {
+        type: 'horizontalBar',
+        data: {
+            labels: stocks,
+            datasets: [{
+                label: 'Variação (%)',
+                data: gains,
+                backgroundColor: '#16a34a',
+                borderRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return value + '%';
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Gráfico de Volatilidade
+function initializeVolatilityChart() {
+    const ctx = document.getElementById('volatilityChart');
+    if (!ctx) return;
+
+    const labels = [];
+    const volatilityData = [];
+    
+    for (let i = 19; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        labels.push(date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }));
+        volatilityData.push(Math.random() * 3 + 1); // Volatilidade entre 1% e 4%
+    }
+
+    volatilityChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Volatilidade (%)',
+                data: volatilityData,
+                borderColor: '#f59e0b',
+                backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return value.toFixed(1) + '%';
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Carregar ações em destaque
+async function loadFeaturedStocks() {
+    try {
+        // Dados simulados de ações em destaque
+        const featuredStocks = [
+            { symbol: 'PETR4', name: 'Petrobras', price: 31.45, change: 2.1, volume: '125M', pe: 8.5, divYield: 12.5, score: 85 },
+            { symbol: 'VALE3', name: 'Vale', price: 68.20, change: 1.8, volume: '89M', pe: 6.2, divYield: 8.9, score: 78 },
+            { symbol: 'ITUB4', name: 'Itaú Unibanco', price: 25.80, change: -0.5, volume: '156M', pe: 9.1, divYield: 6.2, score: 72 },
+            { symbol: 'BBDC4', name: 'Bradesco', price: 13.45, change: 1.2, volume: '98M', pe: 7.8, divYield: 7.1, score: 69 },
+            { symbol: 'ABEV3', name: 'Ambev', price: 12.90, change: 0.8, volume: '67M', pe: 15.2, divYield: 4.5, score: 65 }
+        ];
+
+        const tbody = document.getElementById('featuredStocksBody');
+        if (!tbody) return;
+
+        tbody.innerHTML = featuredStocks.map(stock => `
+            <tr>
+                <td>
+                    <div class="stock-symbol">${stock.symbol}</div>
+                    <div class="stock-name">${stock.name}</div>
+                </td>
+                <td>R$ ${stock.price.toFixed(2)}</td>
+                <td class="price-change ${stock.change > 0 ? 'positive' : 'negative'}">
+                    ${stock.change > 0 ? '+' : ''}${stock.change}%
+                </td>
+                <td>${stock.volume}</td>
+                <td>${stock.pe}</td>
+                <td>${stock.divYield}%</td>
+                <td>
+                    <span class="score-badge ${getScoreBadgeClass(stock.score)}">
+                        ${stock.score}
+                    </span>
+                </td>
+                <td>
+                    <button class="action-btn analyze" onclick="analyzeStockFromTable('${stock.symbol}')">
+                        Analisar
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+
+    } catch (error) {
+        console.error('Erro ao carregar ações em destaque:', error);
+    }
+}
+
+// Função auxiliar para classe do score
+function getScoreBadgeClass(score) {
+    if (score >= 80) return 'excellent';
+    if (score >= 70) return 'good';
+    if (score >= 60) return 'average';
+    return 'poor';
+}
+
+// Analisar ação da tabela
+function analyzeStockFromTable(symbol) {
+    document.getElementById('stock-symbol').value = symbol;
+    showSection('analise');
+    analyzeStock();
+}
+
+// Carregar indicadores econômicos
+async function loadEconomicIndicators() {
+    try {
+        // Dados simulados de indicadores econômicos
+        const indicators = {
+            ipca: { value: '4.62%', data: [4.1, 4.3, 4.5, 4.6, 4.62] },
+            pib: { value: '2.1%', data: [1.8, 1.9, 2.0, 2.05, 2.1] },
+            unemployment: { value: '8.9%', data: [9.5, 9.2, 9.0, 8.95, 8.9] },
+            commodities: { value: '+2.3%', data: [98, 101, 99, 102, 103] }
+        };
+
+        // Atualizar valores
+        document.getElementById('ipca-value').textContent = indicators.ipca.value;
+        document.getElementById('pib-value').textContent = indicators.pib.value;
+        document.getElementById('unemployment-value').textContent = indicators.unemployment.value;
+        document.getElementById('commodities-value').textContent = indicators.commodities.value;
+
+        // Criar mini gráficos
+        createMiniChart('ipcaChart', indicators.ipca.data, '#f59e0b');
+        createMiniChart('pibChart', indicators.pib.data, '#16a34a');
+        createMiniChart('unemploymentChart', indicators.unemployment.data, '#dc2626');
+        createMiniChart('commoditiesChart', indicators.commodities.data, '#8b5cf6');
+
+    } catch (error) {
+        console.error('Erro ao carregar indicadores econômicos:', error);
+    }
+}
+
+// Criar mini gráfico
+function createMiniChart(canvasId, data, color) {
+    const ctx = document.getElementById(canvasId);
+    if (!ctx) return;
+
+    miniCharts[canvasId] = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['', '', '', '', ''],
+            datasets: [{
+                data: data,
+                borderColor: color,
+                backgroundColor: color + '20',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                x: { display: false },
+                y: { display: false }
+            },
+            elements: {
+                point: { radius: 0 }
+            }
+        }
+    });
+}
+
+// Funções de atualização dos gráficos
+function updateIbovespaChart(period) {
+    // Atualizar botões ativos
+    document.querySelectorAll('#ibovespaChart').forEach(chart => {
+        chart.parentElement.querySelectorAll('.chart-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+    });
+    event.target.classList.add('active');
+
+    // Simular novos dados baseados no período
+    const dataPoints = period === '1M' ? 30 : period === '3M' ? 90 : period === '6M' ? 180 : 365;
+    const newLabels = [];
+    const newData = [];
+    
+    for (let i = dataPoints - 1; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        newLabels.push(date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }));
+        newData.push(126000 + (Math.random() - 0.5) * 5000);
+    }
+
+    ibovespaChart.data.labels = newLabels;
+    ibovespaChart.data.datasets[0].data = newData;
+    ibovespaChart.update();
+}
+
+function updateSectorChart(type) {
+    // Atualizar botões ativos
+    event.target.parentElement.querySelectorAll('.chart-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+
+    const sectors = ['Bancos', 'Petróleo', 'Mineração', 'Varejo', 'Tecnologia', 'Energia'];
+    let newData;
+
+    if (type === 'performance') {
+        newData = [2.5, 1.8, -0.5, 3.2, 4.1, 1.2];
+        sectorChart.data.datasets[0].label = 'Performance (%)';
+    } else {
+        newData = [15.2, 12.8, 8.5, 18.2, 22.1, 9.2];
+        sectorChart.data.datasets[0].label = 'Volume (bilhões)';
+    }
+
+    sectorChart.data.datasets[0].data = newData;
+    sectorChart.data.datasets[0].backgroundColor = newData.map(val => 
+        type === 'performance' ? (val > 0 ? '#16a34a' : '#dc2626') : '#667eea'
+    );
+    sectorChart.update();
+}
+
+function updateTopStocks(type) {
+    // Atualizar botões ativos
+    event.target.parentElement.querySelectorAll('.chart-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+
+    const stocks = ['PETR4', 'VALE3', 'ITUB4', 'BBDC4', 'ABEV3'];
+    let newData, label, color;
+
+    switch(type) {
+        case 'gainers':
+            newData = [5.2, 3.8, 2.1, 4.5, 1.9];
+            label = 'Maiores Altas (%)';
+            color = '#16a34a';
+            break;
+        case 'losers':
+            newData = [-2.1, -1.5, -3.2, -0.8, -2.9];
+            label = 'Maiores Baixas (%)';
+            color = '#dc2626';
+            break;
+        case 'volume':
+            newData = [125, 89, 156, 98, 67];
+            label = 'Volume (milhões)';
+            color = '#667eea';
+            break;
+    }
+
+    topStocksChart.data.datasets[0].data = newData;
+    topStocksChart.data.datasets[0].label = label;
+    topStocksChart.data.datasets[0].backgroundColor = color;
+    topStocksChart.update();
+}
+
+function updateVolatilityChart(period) {
+    // Atualizar botões ativos
+    event.target.parentElement.querySelectorAll('.chart-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+
+    const dataPoints = period === 'daily' ? 20 : 12;
+    const newLabels = [];
+    const newData = [];
+    
+    for (let i = dataPoints - 1; i >= 0; i--) {
+        const date = new Date();
+        if (period === 'daily') {
+            date.setDate(date.getDate() - i);
+            newLabels.push(date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }));
+        } else {
+            date.setDate(date.getDate() - (i * 7));
+            newLabels.push(`Sem ${Math.ceil((dataPoints - i))}`)
+        }
+        newData.push(Math.random() * 3 + 1);
+    }
+
+    volatilityChart.data.labels = newLabels;
+    volatilityChart.data.datasets[0].data = newData;
+    volatilityChart.update();
+}
+
+function updateFeaturedStocks(category) {
+    // Atualizar botões ativos
+    event.target.parentElement.querySelectorAll('.table-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+
+    // Recarregar dados baseado na categoria
+    loadFeaturedStocks();
+}
+
+// Inicializar gráficos da análise de ações
+function initializeStockAnalysisCharts(symbol) {
+    document.getElementById('chart-stock-symbol').textContent = symbol;
+    document.getElementById('stock-charts').style.display = 'block';
+    
+    initializeStockPriceChart(symbol);
+    initializeStockVolumeChart(symbol);
+    initializeTechnicalChart(symbol);
+    initializeComparisonChart(symbol);
+    initializeFundamentalsChart(symbol);
+    loadDetailedMetrics(symbol);
+}
+
+function initializeStockPriceChart(symbol) {
+    const ctx = document.getElementById('stockPriceChart');
+    if (!ctx) return;
+
+    // Dados simulados de preço
+    const labels = [];
+    const prices = [];
+    const basePrice = 30;
+    
+    for (let i = 29; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        labels.push(date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }));
+        prices.push(basePrice + (Math.random() - 0.5) * 5);
+    }
+
+    if (stockPriceChart) {
+        stockPriceChart.destroy();
+    }
+
+    stockPriceChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: `${symbol} - Preço`,
+                data: prices,
+                borderColor: '#667eea',
+                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: false,
+                    ticks: {
+                        callback: function(value) {
+                            return 'R$ ' + value.toFixed(2);
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function initializeStockVolumeChart(symbol) {
+    const ctx = document.getElementById('stockVolumeChart');
+    if (!ctx) return;
+
+    // Dados simulados de volume
+    const labels = [];
+    const volumes = [];
+    
+    for (let i = 29; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        labels.push(date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }));
+        volumes.push(Math.random() * 50000000 + 10000000);
+    }
+
+    if (stockVolumeChart) {
+        stockVolumeChart.destroy();
+    }
+
+    stockVolumeChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Volume',
+                data: volumes,
+                backgroundColor: '#f59e0b',
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return (value / 1000000).toFixed(1) + 'M';
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function initializeTechnicalChart(symbol) {
+    const ctx = document.getElementById('technicalChart');
+    if (!ctx) return;
+
+    // Dados simulados de RSI
+    const labels = [];
+    const rsiData = [];
+    
+    for (let i = 19; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        labels.push(date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }));
+        rsiData.push(Math.random() * 40 + 30); // RSI entre 30 e 70
+    }
+
+    if (technicalChart) {
+        technicalChart.destroy();
+    }
+
+    technicalChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'RSI',
+                data: rsiData,
+                borderColor: '#8b5cf6',
+                backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    min: 0,
+                    max: 100,
+                    ticks: {
+                        callback: function(value) {
+                            return value.toFixed(0);
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function initializeComparisonChart(symbol) {
+    const ctx = document.getElementById('comparisonChart');
+    if (!ctx) return;
+
+    // Dados simulados de comparação
+    const labels = [];
+    const stockData = [];
+    const ibovespaData = [];
+    
+    for (let i = 29; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        labels.push(date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }));
+        stockData.push((Math.random() - 0.5) * 10);
+        ibovespaData.push((Math.random() - 0.5) * 5);
+    }
+
+    if (comparisonChart) {
+        comparisonChart.destroy();
+    }
+
+    comparisonChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: symbol,
+                data: stockData,
+                borderColor: '#667eea',
+                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                borderWidth: 2,
+                fill: false,
+                tension: 0.4
+            }, {
+                label: 'Ibovespa',
+                data: ibovespaData,
+                borderColor: '#16a34a',
+                backgroundColor: 'rgba(22, 163, 74, 0.1)',
+                borderWidth: 2,
+                fill: false,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: true }
+            },
+            scales: {
+                y: {
+                    ticks: {
+                        callback: function(value) {
+                            return value.toFixed(1) + '%';
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function initializeFundamentalsChart(symbol) {
+    const ctx = document.getElementById('fundamentalsChart');
+    if (!ctx) return;
+
+    const metrics = ['P/E', 'P/B', 'ROE', 'ROA', 'Margem'];
+    const values = [12.5, 1.8, 15.2, 8.5, 12.8];
+
+    if (fundamentalsChart) {
+        fundamentalsChart.destroy();
+    }
+
+    fundamentalsChart = new Chart(ctx, {
+        type: 'radar',
+        data: {
+            labels: metrics,
+            datasets: [{
+                label: symbol,
+                data: values,
+                borderColor: '#667eea',
+                backgroundColor: 'rgba(102, 126, 234, 0.2)',
+                borderWidth: 2,
+                pointBackgroundColor: '#667eea'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                r: {
+                    beginAtZero: true,
+                    max: 20
+                }
+            }
+        }
+    });
+}
+
+function loadDetailedMetrics(symbol) {
+    // Dados simulados de métricas detalhadas
+    const metrics = {
+        pe: '12.5',
+        pb: '1.8',
+        peg: '1.2',
+        evEbitda: '8.5',
+        roe: '15.2%',
+        roa: '8.5%',
+        roic: '12.8%',
+        margin: '12.8%',
+        debtEquity: '0.45',
+        currentRatio: '1.8',
+        netDebtEbitda: '2.1',
+        revenueGrowth: '8.5%',
+        earningsGrowth: '12.3%',
+        dividendYield: '6.2%'
+    };
+
+    // Atualizar valores na interface
+    Object.keys(metrics).forEach(key => {
+        const element = document.getElementById(`metric-${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`);
+        if (element) {
+            element.textContent = metrics[key];
+        }
+    });
+}
+
+// Funções de atualização dos gráficos de análise
+function updateStockChart(period) {
+    // Atualizar botões ativos
+    event.target.parentElement.querySelectorAll('.chart-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+
+    // Recriar gráfico com novo período
+    const symbol = document.getElementById('chart-stock-symbol').textContent;
+    initializeStockPriceChart(symbol);
+}
+
+function updateTechnicalChart(indicator) {
+    // Atualizar botões ativos
+    event.target.parentElement.querySelectorAll('.chart-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+
+    // Simular dados do indicador selecionado
+    const symbol = document.getElementById('chart-stock-symbol').textContent;
+    initializeTechnicalChart(symbol);
+}
+
+function updateComparisonChart(comparison) {
+    // Atualizar botões ativos
+    event.target.parentElement.querySelectorAll('.chart-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+
+    // Recriar gráfico com nova comparação
+    const symbol = document.getElementById('chart-stock-symbol').textContent;
+    initializeComparisonChart(symbol);
+}
+
+// Inicializar dashboard quando a seção for mostrada
+function showSection(sectionName) {
+    // Código existente de showSection...
+    
+    // Adicionar inicialização do dashboard
+    if (sectionName === 'dashboard') {
+        setTimeout(() => {
+            initializeDashboard();
+        }, 100);
+    }
+    
+    // Resto do código existente...
+}
 

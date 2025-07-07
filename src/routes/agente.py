@@ -4,9 +4,9 @@ import requests
 import json
 from datetime import datetime
 
-from src.models.investidor import MetodologiasInvestimento, TipoInvestidor
-from src.models.analise_financeira import AnaliseFinanceira, DadosFinanceiros, AnaliseResultado
-from src.data import (
+from models.investidor import MetodologiasInvestimento, TipoInvestidor
+from models.analise_financeira import AnaliseFinanceira, DadosFinanceiros, AnaliseResultado
+from data import (
     INVESTIDORES_PERFIS, 
     CHAT_MENSAGENS, 
     CHAT_RESPOSTAS, 
@@ -17,9 +17,9 @@ from src.data import (
     calculate_score_range,
     get_all_investors
 )
-from src.data_api import ApiClient
-from src.models.acao import Acao, db
-from src.routes.user import require_oauth
+from data_api import ApiClient
+from models.acao import Acao, db
+from routes.user import require_oauth
 
 api_client = ApiClient()
 

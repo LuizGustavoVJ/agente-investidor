@@ -5,9 +5,9 @@ from flask import (
 )
 from flask_cors import CORS
 from flask_migrate import Migrate
-from src.models.acao import db
-from src.routes.user import user_bp
-from src.routes.agente import agente_bp
+from models.acao import db
+from routes.user import user_bp
+from routes.agente import agente_bp
 
 # DON'T CHANGE THIS !!!
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))

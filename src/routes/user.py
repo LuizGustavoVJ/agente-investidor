@@ -1,6 +1,6 @@
 import jwt
 from flask import Blueprint, jsonify, request, g, current_app
-from src.models.user import User, db
+from models.user import User, db
 from authlib.integrations.flask_oauth2 import ResourceProtector
 from authlib.oauth2.rfc6750 import BearerTokenValidator
 import secrets
