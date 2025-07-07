@@ -1,0 +1,1 @@
+# Este arquivo garante que os modelos sejam importados corretamente. 

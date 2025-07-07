@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeNavigation();
     initializeChatInput();
     showSection('home');
+    populateStockSelect(); // Adicionado para popular o select ao carregar a página
 });
 
 // Navegação
@@ -52,11 +53,11 @@ function showSection(sectionId) {
 
 // Análise de Ações
 async function analyzeStock() {
-    const symbol = document.getElementById('stock-symbol').value.trim().toUpperCase();
+    const symbol = document.getElementById('stock-select').value.trim().toUpperCase();
     const methodology = document.getElementById('methodology').value;
     
     if (!symbol) {
-        alert('Por favor, digite o símbolo da ação');
+        alert('Por favor, selecione a ação');
         return;
     }
     
@@ -452,4 +453,27 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+// Função para popular o select de ações
+async function populateStockSelect() {
+    const select = document.getElementById('stock-select');
+    select.innerHTML = '<option value="">Carregando ações...</option>';
+    try {
+        const response = await fetch(`${API_BASE_URL}/acoes-disponiveis`);
+        const data = await response.json();
+        if (data.success && Array.isArray(data.acoes)) {
+            select.innerHTML = '<option value="">Selecione...</option>';
+            data.acoes.forEach(acao => {
+                const opt = document.createElement('option');
+                opt.value = acao.symbol;
+                opt.textContent = `${acao.symbol} - ${acao.nome || ''} (${acao.bolsa || ''})`;
+                select.appendChild(opt);
+            });
+        } else {
+            select.innerHTML = '<option value="">Nenhuma ação disponível</option>';
+        }
+    } catch (e) {
+        select.innerHTML = '<option value="">Erro ao carregar ações</option>';
+    }
+}
 
