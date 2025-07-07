@@ -1,36 +1,38 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agente Investidor - Seu Mentor Financeiro</title>
-    <link rel="stylesheet" href="styles.css">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>Agente Investidor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <script src="https://kit.fontawesome.com/1c2e7e2e2e.js" crossorigin="anonymous"></script>
 </head>
 <body>
-    <!-- Header -->
     <header class="header">
-        <div class="container">
-            <div class="header-content">
-                <div class="logo">
-                    <i class="fas fa-chart-line"></i>
-                    <span>Agente Investidor</span>
-                </div>
-                <nav class="nav">
-                    <a href="#home" class="nav-link active">Início</a>
-                    <a href="#analise" class="nav-link">Análise</a>
-                    <a href="#chat" class="nav-link">Chat</a>
-                    <a href="#metodologias" class="nav-link">Metodologias</a>
-                </nav>
+        <div class="container header-content">
+            <div class="logo">
+                <i class="fas fa-chart-line"></i> Agente Investidor
             </div>
+            <nav class="nav">
+                <a href="#" class="nav-link" onclick="showSection('home')">Home</a>
+                <a href="#" class="nav-link" onclick="showSection('analise')">Análise</a>
+                <a href="#" class="nav-link" onclick="showSection('chat')">Chat</a>
+                <a href="#" class="nav-link" onclick="showSection('metodologias')">Metodologias</a>
+                <div id="user-menu" class="user-menu" style="display:none; position:relative;">
+                    <span id="user-info" class="nav-link user-info" style="cursor:pointer;"></span>
+                    <div id="user-dropdown" class="user-dropdown" style="display:none; position:absolute; right:0; background:#fff; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.1); min-width:120px; z-index:100;">
+                        <a href="#" id="menu-logout" class="nav-link" style="color:#ef4444; display:block; text-align:left;">Logout</a>
+                    </div>
+                </div>
+                <a href="/login" class="nav-link" id="menu-login">Login</a>
+                <a href="/cadastro" class="nav-link" id="menu-cadastro">Cadastro</a>
+            </nav>
         </div>
     </header>
-
-    <!-- Main Content -->
     <main class="main">
-        <!-- Home Section -->
-        <section id="home" class="section active">
+           <!-- Home Section -->
+           <section id="home" class="section active">
             <div class="container">
                 <div class="hero">
                     <div class="hero-content">
@@ -68,7 +70,7 @@
                                 <i class="fas fa-brain"></i>
                             </div>
                             <div class="stat-content">
-                                <h3>5</h3>
+                                <h3>4</h3>
                                 <p>Metodologias de Análise</p>
                             </div>
                         </div>
@@ -343,8 +345,7 @@
             </div>
         </div>
     </footer>
-
-    <script src="script.js"></script>
+    </main>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>
-

@@ -4,31 +4,93 @@ const API_BASE_URL = window.location.origin + '/api/agente';
 // Estado da aplicação
 let currentSection = 'home';
 
-// Inicialização
+// Inicialização modular por página
+
 document.addEventListener('DOMContentLoaded', function() {
-    initializeNavigation();
-    initializeChatInput();
-    showSection('home');
-    populateStockSelect(); // Adicionado para popular o select ao carregar a página
+    const path = window.location.pathname;
+    if (path === '/' || path === '/index.html') {
+        // Home/Análise/Chat
+        try { initializeChatInput(); } catch(e){}
+        try { populateStockSelect(); } catch(e){}
+    }
+    if (path === '/login') {
+        setupLoginForm();
+    }
+    if (path === '/cadastro') {
+        setupCadastroForm();
+    }
 });
 
-// Navegação
-function initializeNavigation() {
-    const navLinks = document.querySelectorAll('.nav-link');
-    
-    navLinks.forEach(link => {
-        link.addEventListener('click', function(e) {
-            e.preventDefault();
-            const sectionId = this.getAttribute('href').substring(1);
-            showSection(sectionId);
-            
-            // Atualizar estado ativo
-            navLinks.forEach(l => l.classList.remove('active'));
-            this.classList.add('active');
-        });
-    });
+function setupLoginForm() {
+    const form = document.getElementById('login-form');
+    if (!form) return;
+    form.onsubmit = async function(e) {
+        e.preventDefault();
+        const username = document.getElementById('login-username').value.trim();
+        const password = document.getElementById('login-password').value;
+        const errorMsg = document.getElementById('login-error-msg');
+        errorMsg.style.display = 'none';
+        try {
+            // Usar endpoint absoluto para login
+            const resp = await fetch('/api/user/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            const data = await resp.json();
+            console.log('Login response:', data);
+            if (data.success && data.access_token) {
+                setAuthToken(data.access_token);
+                console.log('Token salvo:', getAuthToken());
+                window.location.href = '/';
+            } else {
+                errorMsg.textContent = data.error || 'Erro ao fazer login.';
+                errorMsg.style.display = 'block';
+            }
+        } catch (err) {
+            errorMsg.textContent = 'Erro de conexão.';
+            errorMsg.style.display = 'block';
+        }
+    };
 }
 
+function setupCadastroForm() {
+    const form = document.getElementById('cadastro-form');
+    if (!form) return;
+    form.onsubmit = async function(e) {
+        e.preventDefault();
+        const username = document.getElementById('cadastro-username').value.trim();
+        const email = document.getElementById('cadastro-email').value.trim();
+        const password = document.getElementById('cadastro-password').value;
+        const errorMsg = document.getElementById('cadastro-error-msg');
+        const successMsg = document.getElementById('cadastro-success-msg');
+        errorMsg.style.display = 'none';
+        successMsg.style.display = 'none';
+        try {
+            const resp = await fetch(`${API_BASE_URL.replace('/agente','')}/user/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, email, password })
+            });
+            const data = await resp.json();
+            if (data.success) {
+                successMsg.textContent = 'Cadastro realizado com sucesso! Faça login.';
+                successMsg.style.display = 'block';
+                errorMsg.style.display = 'none';
+            } else {
+                errorMsg.textContent = data.error || 'Erro ao cadastrar.';
+                errorMsg.style.display = 'block';
+                successMsg.style.display = 'none';
+            }
+        } catch (err) {
+            errorMsg.textContent = 'Erro de conexão.';
+            errorMsg.style.display = 'block';
+            successMsg.style.display = 'none';
+        }
+    };
+}
+
+// Navegação
 function showSection(sectionId) {
     // Esconder todas as seções
     const sections = document.querySelectorAll('.section');
@@ -476,4 +538,160 @@ async function populateStockSelect() {
         select.innerHTML = '<option value="">Erro ao carregar ações</option>';
     }
 }
+
+// --- Autenticação ---
+const AUTH_TOKEN_KEY = 'access_token';
+
+function getAuthToken() {
+    return localStorage.getItem(AUTH_TOKEN_KEY);
+}
+
+function setAuthToken(token) {
+    localStorage.setItem(AUTH_TOKEN_KEY, token);
+}
+
+function clearAuthToken() {
+    localStorage.removeItem(AUTH_TOKEN_KEY);
+}
+
+// Intercepta fetch para adicionar token
+const originalFetch = window.fetch;
+window.fetch = async (input, init = {}) => {
+    const token = getAuthToken();
+    if (token && typeof input === 'string' && (input.includes('/api/agente/') || input.includes('/api/user/'))) {
+        init.headers = init.headers || {};
+        init.headers['Authorization'] = 'Bearer ' + token;
+    }
+    return originalFetch(input, init);
+};
+
+// Lógica do modal
+function setupAuthModal() {
+    const form = document.getElementById('auth-form');
+    form.onsubmit = async function(e) {
+        e.preventDefault();
+        const mode = document.getElementById('auth-modal-title').textContent === 'Entrar' ? 'login' : 'register';
+        const username = document.getElementById('auth-username').value.trim();
+        const email = document.getElementById('auth-email').value.trim();
+        const password = document.getElementById('auth-password').value;
+        const errorMsg = document.getElementById('auth-error-msg');
+        errorMsg.style.display = 'none';
+        try {
+            if (mode === 'login') {
+                const resp = await fetch(`${API_BASE_URL.replace('/agente','')}/user/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await resp.json();
+                if (data.success && data.access_token) {
+                    setAuthToken(data.access_token);
+                    hideAuthModal();
+                    location.reload();
+                } else {
+                    errorMsg.textContent = data.error || 'Erro ao fazer login.';
+                    errorMsg.style.display = 'block';
+                }
+            } else {
+                const resp = await fetch(`${API_BASE_URL.replace('/agente','')}/user/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, email, password })
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    showAuthModal('login');
+                } else {
+                    errorMsg.textContent = data.error || 'Erro ao cadastrar.';
+                    errorMsg.style.display = 'block';
+                }
+            }
+        } catch (err) {
+            errorMsg.textContent = 'Erro de conexão.';
+            errorMsg.style.display = 'block';
+        }
+    };
+}
+
+// Checa autenticação ao carregar
+function checkAuthOnLoad() {
+    const token = getAuthToken();
+    if (!token) {
+        showAuthModal('login');
+    } else {
+        // Testa token
+        fetch(`${API_BASE_URL.replace('/agente','')}/user/me`).then(r => r.json()).then(data => {
+            if (!data.success) {
+                clearAuthToken();
+                showAuthModal('login');
+            }
+        }).catch(() => {
+            clearAuthToken();
+            showAuthModal('login');
+        });
+    }
+}
+
+function updateUserMenu() {
+    const userMenu = document.getElementById('user-menu');
+    const userInfo = document.getElementById('user-info');
+    const userDropdown = document.getElementById('user-dropdown');
+    const menuLogin = document.getElementById('menu-login');
+    const menuCadastro = document.getElementById('menu-cadastro');
+    if (!userMenu || !userInfo || !userDropdown || !menuLogin || !menuCadastro) {
+        return;
+    }
+    const token = getAuthToken();
+    if (token) {
+        fetch(`${API_BASE_URL.replace('/agente','')}/user/me`).then(async r => {
+            let data;
+            try {
+                data = await r.json();
+            } catch (e) {
+                clearAuthToken();
+                userMenu.style.display = 'none';
+                menuLogin.style.display = 'inline-block';
+                menuCadastro.style.display = 'inline-block';
+                return;
+            }
+            if (data.success) {
+                userInfo.textContent = data.user.username;
+                userMenu.style.display = 'inline-block';
+                menuLogin.style.display = 'none';
+                menuCadastro.style.display = 'none';
+            } else {
+                clearAuthToken();
+                userMenu.style.display = 'none';
+                menuLogin.style.display = 'inline-block';
+                menuCadastro.style.display = 'inline-block';
+            }
+        });
+    } else {
+        userMenu.style.display = 'none';
+        menuLogin.style.display = 'inline-block';
+        menuCadastro.style.display = 'inline-block';
+    }
+    // Dropdown toggle
+    userInfo.onclick = function(e) {
+        e.preventDefault();
+        userDropdown.style.display = userDropdown.style.display === 'block' ? 'none' : 'block';
+    };
+    // Fechar dropdown ao clicar fora
+    document.addEventListener('click', function(e) {
+        if (!userMenu.contains(e.target)) {
+            userDropdown.style.display = 'none';
+        }
+    });
+    // Logout
+    document.getElementById('menu-logout').onclick = function(e) {
+        e.preventDefault();
+        clearAuthToken();
+        window.location.href = '/login';
+    };
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    updateUserMenu();
+    // ... restante da inicialização modular ...
+});
 
