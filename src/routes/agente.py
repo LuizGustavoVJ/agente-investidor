@@ -4,22 +4,40 @@ import requests
 import json
 from datetime import datetime
 
-from models.investidor import MetodologiasInvestimento, TipoInvestidor
-from models.analise_financeira import AnaliseFinanceira, DadosFinanceiros, AnaliseResultado
-from data import (
-    INVESTIDORES_PERFIS, 
-    CHAT_MENSAGENS, 
-    CHAT_RESPOSTAS, 
-    APIConfig,
-    get_simulated_data,
-    is_brazilian_stock,
-    format_currency,
-    calculate_score_range,
-    get_all_investors
-)
-from data_api import ApiClient
-from models.acao import Acao, db
-from routes.user import require_oauth
+try:
+    from models.investidor import MetodologiasInvestimento, TipoInvestidor
+    from models.analise_financeira import AnaliseFinanceira, DadosFinanceiros, AnaliseResultado
+    from data import (
+        INVESTIDORES_PERFIS, 
+        CHAT_MENSAGENS, 
+        CHAT_RESPOSTAS, 
+        APIConfig,
+        get_simulated_data,
+        is_brazilian_stock,
+        format_currency,
+        calculate_score_range,
+        get_all_investors
+    )
+    from data_api import ApiClient
+    from models.acao import Acao, db
+    from routes.user import require_oauth
+except ImportError:
+    from src.models.investidor import MetodologiasInvestimento, TipoInvestidor
+    from src.models.analise_financeira import AnaliseFinanceira, DadosFinanceiros, AnaliseResultado
+    from src.data import (
+        INVESTIDORES_PERFIS, 
+        CHAT_MENSAGENS, 
+        CHAT_RESPOSTAS, 
+        APIConfig,
+        get_simulated_data,
+        is_brazilian_stock,
+        format_currency,
+        calculate_score_range,
+        get_all_investors
+    )
+    from src.data_api import ApiClient
+    from src.models.acao import Acao, db
+    from src.routes.user import require_oauth
 
 api_client = ApiClient()
 
