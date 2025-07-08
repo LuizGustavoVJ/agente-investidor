@@ -92,17 +92,18 @@ function setupCadastroForm() {
 
 // Navegação
 function showSection(sectionId) {
+    console.log('showSection chamada para:', sectionId);
     // Esconder todas as seções
     const sections = document.querySelectorAll('.section');
     sections.forEach(section => section.classList.remove('active'));
-    
     // Mostrar seção selecionada
     const targetSection = document.getElementById(sectionId);
     if (targetSection) {
         targetSection.classList.add('active');
         currentSection = sectionId;
+    } else {
+        console.warn('Seção não encontrada:', sectionId);
     }
-    
     // Atualizar navegação
     const navLinks = document.querySelectorAll('.nav-link');
     navLinks.forEach(link => {
@@ -111,7 +112,6 @@ function showSection(sectionId) {
             link.classList.add('active');
         }
     });
-    
     // Inicializar dashboard quando necessário
     if (sectionId === 'dashboard') {
         setTimeout(() => {
@@ -772,6 +772,45 @@ function initializeCharts() {
     initializeEconomicCharts();
 }
 
+function initializeEconomicCharts() {
+    // Inicialização simulada dos gráficos econômicos
+    // Exemplo: mini-charts de IPCA, PIB, Desemprego, Commodities
+    const charts = [
+        { id: 'ipcaChart', label: 'IPCA', data: [3.5, 4.2, 5.1, 4.8, 3.9] },
+        { id: 'pibChart', label: 'PIB', data: [1.2, 1.5, 2.1, 1.8, 2.3] },
+        { id: 'unemploymentChart', label: 'Desemprego', data: [12, 11.5, 10.8, 9.9, 9.2] },
+        { id: 'commoditiesChart', label: 'Commodities', data: [100, 110, 120, 115, 130] }
+    ];
+    charts.forEach(chart => {
+        const ctx = document.getElementById(chart.id);
+        if (!ctx) return;
+        if (miniCharts[chart.id]) {
+            miniCharts[chart.id].destroy();
+        }
+        miniCharts[chart.id] = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['2019', '2020', '2021', '2022', '2023'],
+                datasets: [{
+                    label: chart.label,
+                    data: chart.data,
+                    borderColor: '#667eea',
+                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: false } }
+            }
+        });
+    });
+}
+
 // Gráfico do Ibovespa
 function initializeIbovespaChart() {
     const ctx = document.getElementById('ibovespaChart');
@@ -1079,34 +1118,32 @@ async function loadEconomicIndicators() {
 function createMiniChart(canvasId, data, color) {
     const ctx = document.getElementById(canvasId);
     if (!ctx) return;
-
+    if (miniCharts[canvasId]) {
+        try {
+            miniCharts[canvasId].destroy();
+        } catch (e) {
+            console.warn('Erro ao destruir miniChart:', canvasId, e);
+        }
+    }
     miniCharts[canvasId] = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: ['', '', '', '', ''],
+            labels: ['2019', '2020', '2021', '2022', '2023'],
             datasets: [{
+                label: '',
                 data: data,
                 borderColor: color,
-                backgroundColor: color + '20',
+                backgroundColor: 'rgba(102, 126, 234, 0.1)',
                 borderWidth: 2,
                 fill: true,
-                tension: 0.4,
-                pointRadius: 0
+                tension: 0.4
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false }
-            },
-            scales: {
-                x: { display: false },
-                y: { display: false }
-            },
-            elements: {
-                point: { radius: 0 }
-            }
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: false } }
         }
     });
 }
@@ -1574,17 +1611,5 @@ function updateComparisonChart(comparison) {
     initializeComparisonChart(symbol);
 }
 
-// Inicializar dashboard quando a seção for mostrada
-function showSection(sectionName) {
-    // Código existente de showSection...
-    
-    // Adicionar inicialização do dashboard
-    if (sectionName === 'dashboard') {
-        setTimeout(() => {
-            initializeDashboard();
-        }, 100);
-    }
-    
-    // Resto do código existente...
-}
+window.showSection = showSection;
 
