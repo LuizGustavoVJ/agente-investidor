@@ -111,6 +111,17 @@ function showSection(sectionId) {
             link.classList.add('active');
         }
     });
+    
+    // Inicializar dashboard quando necessário
+    if (sectionId === 'dashboard') {
+        setTimeout(() => {
+            try {
+                initializeDashboard();
+            } catch(e) {
+                console.error('Erro ao inicializar dashboard:', e);
+            }
+        }, 100);
+    }
 }
 
 // Análise de Ações
@@ -691,7 +702,7 @@ function updateUserMenu() {
     document.getElementById('menu-logout').onclick = function(e) {
         e.preventDefault();
         clearAuthToken();
-        window.location.href = '/login';
+        window.location.href = '/';
     };
 }
 
@@ -766,6 +777,12 @@ function initializeIbovespaChart() {
     const ctx = document.getElementById('ibovespaChart');
     if (!ctx) return;
 
+    // Destruir gráfico existente se houver
+    if (ibovespaChart) {
+        ibovespaChart.destroy();
+        ibovespaChart = null;
+    }
+
     // Dados simulados do Ibovespa (últimos 30 dias)
     const labels = [];
     const data = [];
@@ -822,8 +839,14 @@ function initializeSectorChart() {
     const ctx = document.getElementById('sectorChart');
     if (!ctx) return;
 
-    const sectors = ['Bancos', 'Petróleo', 'Mineração', 'Varejo', 'Tecnologia', 'Energia'];
-    const performance = [2.5, 1.8, -0.5, 3.2, 4.1, 1.2];
+    // Destruir gráfico existente se houver
+    if (sectorChart) {
+        sectorChart.destroy();
+        sectorChart = null;
+    }
+
+    const sectors = ['Financeiro', 'Petróleo', 'Mineração', 'Varejo', 'Tecnologia'];
+    const performance = [2.1, 1.8, 3.2, 0.9, 4.1];
 
     sectorChart = new Chart(ctx, {
         type: 'bar',
@@ -863,11 +886,17 @@ function initializeTopStocksChart() {
     const ctx = document.getElementById('topStocksChart');
     if (!ctx) return;
 
+    // Destruir gráfico existente se houver
+    if (topStocksChart) {
+        topStocksChart.destroy();
+        topStocksChart = null;
+    }
+
     const stocks = ['PETR4', 'VALE3', 'ITUB4', 'BBDC4', 'ABEV3'];
     const gains = [5.2, 3.8, 2.1, 4.5, 1.9];
 
     topStocksChart = new Chart(ctx, {
-        type: 'horizontalBar',
+        type: 'bar',
         data: {
             labels: stocks,
             datasets: [{
@@ -880,6 +909,7 @@ function initializeTopStocksChart() {
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            indexAxis: 'y', // Isso faz o gráfico ser horizontal
             plugins: {
                 legend: {
                     display: false
@@ -903,6 +933,12 @@ function initializeTopStocksChart() {
 function initializeVolatilityChart() {
     const ctx = document.getElementById('volatilityChart');
     if (!ctx) return;
+
+    // Destruir gráfico existente se houver
+    if (volatilityChart) {
+        volatilityChart.destroy();
+        volatilityChart = null;
+    }
 
     const labels = [];
     const volatilityData = [];
