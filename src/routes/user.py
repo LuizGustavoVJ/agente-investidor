@@ -109,3 +109,68 @@ def me():
             'error': 'Usuário não encontrado.'
         }), 404
     return jsonify({'success': True, 'user': user.to_dict()})
+
+@user_bp.route('/perfil-investidor', methods=['GET'])
+@require_oauth()
+def get_perfil_investidor():
+    token_obj = g.authlib_server_oauth2_token
+    if not token_obj:
+        return jsonify({'success': False, 'error': 'Token inválido.'}), 401
+    user_id = token_obj.get('user_id')
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'success': False, 'error': 'Usuário não encontrado.'}), 404
+    return jsonify({
+        'success': True,
+        'perfil_investidor': user.perfil_investidor,
+        'perfil_respostas': user.perfil_respostas
+    })
+
+@user_bp.route('/perfil-investidor', methods=['POST'])
+@require_oauth()
+def post_perfil_investidor():
+    token_obj = g.authlib_server_oauth2_token
+    if not token_obj:
+        return jsonify({'success': False, 'error': 'Token inválido.'}), 401
+    user_id = token_obj.get('user_id')
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'success': False, 'error': 'Usuário não encontrado.'}), 404
+    data = request.json
+    perfil = data.get('perfil_investidor')
+    respostas = data.get('perfil_respostas')
+    if not perfil or not respostas:
+        return jsonify({'success': False, 'error': 'Perfil e respostas são obrigatórios.'}), 400
+    user.perfil_investidor = perfil
+    user.perfil_respostas = respostas
+    db.session.commit()
+    return jsonify({'success': True, 'message': 'Perfil salvo com sucesso.'})
+
+@user_bp.route('/metodologias-recomendadas', methods=['GET'])
+@require_oauth()
+def get_metodologias_recomendadas():
+    token_obj = g.authlib_server_oauth2_token
+    if not token_obj:
+        return jsonify({'success': False, 'error': 'Token inválido.'}), 401
+    user_id = token_obj.get('user_id')
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'success': False, 'error': 'Usuário não encontrado.'}), 404
+    perfil = user.perfil_investidor
+    if not perfil:
+        return jsonify({'success': False, 'error': 'Perfil de investidor não definido.'}), 400
+    # Importar o mapeamento
+    try:
+        from src.models.investidor import METODOLOGIAS_POR_PERFIL
+    except ImportError:
+        from models.investidor import METODOLOGIAS_POR_PERFIL
+    metodologias = METODOLOGIAS_POR_PERFIL.get(perfil, [])
+    # Retornar apenas nome e descrição
+    metodologias_resumidas = [
+        {
+            'nome': m['nome'],
+            'valor': getattr(m['classe'], 'nome', None),
+            'descricao': m['descricao']
+        } for m in metodologias
+    ]
+    return jsonify({'success': True, 'perfil': perfil, 'metodologias': metodologias_resumidas})

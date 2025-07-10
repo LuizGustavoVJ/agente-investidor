@@ -194,17 +194,22 @@ def analisar_acao():
     try:
         data = request.json
         symbol = data.get('symbol', '').upper()
-        metodologia = data.get('metodologia', 'warren_buffett')
-        
+        metodologia = data.get('metodologia')
+
         if not symbol:
             return jsonify({
                 'success': False,
                 'error': 'Símbolo da ação é obrigatório'
             }), 400
-        
+        if not metodologia:
+            return jsonify({
+                'success': False,
+                'error': 'Metodologia é obrigatória'
+            }), 400
+
         # Obter dados da ação
         region = 'BR' if '.SA' in symbol else 'US'
-        
+
         try:
             # Obter dados do gráfico para preço atual e metadados
             chart = api_client.call_api('YahooFinance/get_stock_chart', query={
@@ -213,7 +218,7 @@ def analisar_acao():
                 'interval': '1d',
                 'range': '1mo'
             })
-            
+
             chart_result = []
             result = {}
             meta = {}
@@ -228,14 +233,12 @@ def analisar_acao():
             # Extrair dados básicos
             price = float(meta.get('regularMarketPrice', 0) or 0) if isinstance(meta, dict) else 0.0
             market_cap = float(meta.get('marketCap', 0) or 0) if isinstance(meta, dict) else 0.0
-            
+
             # Criar objeto DadosFinanceiros com dados disponíveis
-            # Nota: Alguns dados podem não estar disponíveis via API gratuita
             dados_financeiros = DadosFinanceiros(
                 symbol=symbol,
                 price=price,
                 market_cap=market_cap,
-                # Dados que precisariam ser obtidos de outras fontes ou calculados
                 pe_ratio=data.get('pe_ratio'),
                 pb_ratio=data.get('pb_ratio'),
                 peg_ratio=data.get('peg_ratio'),
@@ -252,22 +255,17 @@ def analisar_acao():
                 book_value_per_share=data.get('book_value_per_share'),
                 earnings_per_share=data.get('earnings_per_share')
             )
-            
-            # Aplicar metodologia de análise
-            if metodologia == 'warren_buffett':
-                resultado = AnaliseFinanceira.analisar("Value Investing", dados_financeiros)
-            elif metodologia == 'benjamin_graham':
-                resultado = AnaliseFinanceira.analisar("Defensive Value", dados_financeiros)
-            elif metodologia == 'peter_lynch':
-                resultado = AnaliseFinanceira.analisar("Growth at Reasonable Price", dados_financeiros)
-            elif metodologia == 'dividendos':
-                resultado = AnaliseFinanceira.analisar("Dividend Investing", dados_financeiros)
+
+            # Buscar metodologia dinâmica
+            metodologia_cls = METODOLOGIAS_MAP.get(metodologia)
+            if metodologia_cls:
+                resultado = metodologia_cls.analisar(dados_financeiros)
             else:
                 return jsonify({
                     'success': False,
                     'error': f'Metodologia não suportada: {metodologia}'
                 }), 400
-            
+
             # Converter resultado para dict
             resultado_dict = {
                 'symbol': resultado.symbol,
@@ -289,18 +287,18 @@ def analisar_acao():
                     'debt_to_equity': dados_financeiros.debt_to_equity
                 }
             }
-            
+
             return jsonify({
                 'success': True,
                 'data': resultado_dict
             })
-            
+
         except Exception as e:
             return jsonify({
                 'success': False,
                 'error': f'Erro ao analisar ação: {str(e)}'
             }), 500
-            
+
     except Exception as e:
         return jsonify({
             'success': False,

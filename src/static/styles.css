@@ -772,47 +772,44 @@ body {
 
 /* Modal de Login/Registro */
 .modal {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2000;
+  display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100vw; height: 100vh;
+  background: rgba(0,0,0,0.7); justify-content: center; align-items: center;
 }
 .modal-content {
-  background: #fff;
-  border-radius: 16px;
-  padding: 2.5rem 2rem;
-  min-width: 320px;
-  max-width: 90vw;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-  text-align: center;
+  background: #181c24;
+  color: #fff;
+  padding: 2em; border-radius: 8px; max-width: 500px; margin: auto; position: relative;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  padding-top: 2.5em;
 }
-#auth-modal-title {
-  color: #667eea;
-  margin-bottom: 1.5rem;
+.close {
+  position: absolute; right: 1em; top: 1em; cursor: pointer; font-size: 1.5em;
+  z-index: 10;
 }
-#auth-form .form-group label {
-  color: #222;
+#perfil-form button, #perfil-refazer-btn {
+  margin-top: 1em;
 }
-#auth-form .form-input {
-  color: #222;
-  background: #f7f7f7;
-  border: 1px solid #ddd;
+.perfil-pergunta p {
+  font-weight: bold;
+  margin-bottom: 0.5em;
 }
-#auth-form .form-input:focus {
-  border-color: #667eea;
-  background: #fff;
+.perfil-pergunta label {
+  font-size: 1em;
 }
-#auth-submit-btn {
-  margin-top: 1rem;
+.perfil-badge {
+  font-weight: bold;
+  margin-left: 0.5em;
+  padding: 2px 8px;
+  border-radius: 8px;
 }
-#auth-toggle-text {
-  margin-top: 1rem;
+.perfil-badge.conservador {
+  color: #16a34a;
 }
-#auth-error-msg {
-  margin-top: 0.5rem;
+.perfil-badge.moderado {
+  color: #eab308;
+}
+.perfil-badge.arrojado {
+  color: #dc2626;
 }
 
 /* Destaque para mensagens de erro/sucesso em formulários de login/cadastro */

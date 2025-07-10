@@ -27,7 +27,7 @@
                 <a href="#" class="nav-link" onclick="showSection('metodologias')">Metodologias</a>
                 <div id="user-menu" class="user-menu" style="display:none; position:relative;">
                     <span id="user-info" class="nav-link user-info" style="cursor:pointer;"></span>
-                    <div id="user-dropdown" class="user-dropdown" style="display:none; position:absolute; right:0; background:#fff; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.1); min-width:120px; z-index:100;">
+                    <div id="user-dropdown" class="user-dropdown" style="display:block; position:absolute; right:0; text-align:left;  color:rgba(114, 152, 207, 0.1); min-width:120px;">
                         <a href="#" id="menu-logout" class="nav-link" style="color:#ef4444; display:block; text-align:left;">Logout</a>
                     </div>
                 </div>
@@ -308,7 +308,7 @@
         <section id="analise" class="section">
             <div class="container">
                 <h2 class="section-title">Análise de Ações</h2>
-                
+                <div id="perfil-metodologias-recomendadas" class="perfil-metodologias-recomendadas" style="margin-bottom:2em;"></div>
                 <div class="analysis-form">
                     <div class="form-group">
                         <label for="stock-select">Selecione a Ação</label>
@@ -663,7 +663,34 @@
             </div>
         </div>
     </footer>
-    </main>
+    <!-- Modal de Perfil de Investidor -->
+    <div id="perfil-modal" class="modal" style="display:none;">
+      <div class="modal-content">
+        <span class="close" id="close-perfil-modal">&times;</span>
+        <div style="height: 2em;"></div>
+        <div id="perfil-intro" style="display:none;">
+          <h2>Perfil de Investidor</h2>
+          <p>Você ainda não tem um perfil de investidor.<br>Responda o questionário a seguir para criar o seu perfil.</p>
+          <div style="margin-top:2em; text-align:center;">
+            <button id="perfil-iniciar-btn" class="btn btn-primary">Responder</button>
+            <button id="perfil-cancelar-btn" class="btn btn-secondary">Cancelar</button>
+          </div>
+        </div>
+        <form id="perfil-form" style="display:none;">
+          <div id="perfil-pergunta-unica"></div>
+          <div style="margin-top:1.5em; text-align:right;">
+            <button type="button" id="perfil-anterior-btn" class="btn btn-secondary" style="display:none;">Anterior</button>
+            <button type="button" id="perfil-proximo-btn" class="btn btn-primary">Próximo</button>
+            <button type="submit" id="perfil-enviar-btn" class="btn btn-primary" style="display:none;">Enviar</button>
+          </div>
+        </form>
+        <div id="perfil-resultado" style="display:none;">
+          <h3>Seu perfil: <span id="perfil-classificacao"></span></h3>
+          <p id="perfil-descricao"></p>
+          <button id="perfil-refazer-btn" class="btn btn-secondary" style="display:none;">Refazer análise</button>
+        </div>
+      </div>
+    </div>
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>

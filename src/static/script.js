@@ -671,7 +671,19 @@ function updateUserMenu() {
                 return;
             }
             if (data.success) {
-                userInfo.textContent = data.user.username;
+                // Buscar perfil do investidor
+                let perfil = '';
+                try {
+                    const resp = await fetch('/api/user/perfil-investidor', {
+                        headers: { 'Authorization': 'Bearer ' + token }
+                    });
+                    const perfilData = await resp.json();
+                    if (perfilData.success && perfilData.perfil_investidor) {
+                        perfil = perfilData.perfil_investidor;
+                    }
+                } catch (e) {}
+                userInfo.innerHTML = data.user.username + (perfil ?
+                  ` <span class="perfil-badge ${perfil}">(${perfil})</span>` : '');
                 userMenu.style.display = 'inline-block';
                 menuLogin.style.display = 'none';
                 menuCadastro.style.display = 'none';
@@ -1612,4 +1624,379 @@ function updateComparisonChart(comparison) {
 }
 
 window.showSection = showSection;
+
+// ===================== PERFIL DE INVESTIDOR =====================
+
+const PERFIL_PERGUNTAS = [
+  {
+    texto: "Como você se sentiria se seus investimentos perdessem 10% em um mês?",
+    opcoes: [
+      { label: "Muito desconfortável, consideraria resgatar o dinheiro.", valor: "a" },
+      { label: "Um pouco desconfortável, mas manteria o investimento.", valor: "b" },
+      { label: "Tranquilo, sei que oscilações fazem parte do processo.", valor: "c" }
+    ]
+  },
+  {
+    texto: "O que você faria se seus investimentos tivessem perdas sucessivas em 3 meses?",
+    opcoes: [
+      { label: "Mudaria para algo mais seguro.", valor: "a" },
+      { label: "Aguardaria para ver se o mercado melhora.", valor: "b" },
+      { label: "Aproveitaria para investir mais enquanto está barato.", valor: "c" }
+    ]
+  },
+  {
+    texto: "Você aceita correr riscos em troca de maiores retornos?",
+    opcoes: [
+      { label: "Não, prefiro segurança.", valor: "a" },
+      { label: "Sim, mas com moderação.", valor: "b" },
+      { label: "Sim, busco retornos expressivos, mesmo com riscos maiores.", valor: "c" }
+    ]
+  },
+  {
+    texto: "Qual é seu principal objetivo com os investimentos?",
+    opcoes: [
+      { label: "Proteger meu patrimônio e ter segurança.", valor: "a" },
+      { label: "Ter crescimento estável do capital ao longo do tempo.", valor: "b" },
+      { label: "Maximizar os lucros, mesmo com oscilações.", valor: "c" }
+    ]
+  },
+  {
+    texto: "Qual é o seu prazo para usar o dinheiro investido?",
+    opcoes: [
+      { label: "Menos de 1 ano.", valor: "a" },
+      { label: "De 1 a 5 anos.", valor: "b" },
+      { label: "Mais de 5 anos.", valor: "c" }
+    ]
+  },
+  {
+    texto: "Que tipo de retorno você espera obter?",
+    opcoes: [
+      { label: "Próximo à inflação, com baixo risco.", valor: "a" },
+      { label: "Acima da poupança/renda fixa, com risco controlado.", valor: "b" },
+      { label: "Retorno elevado, aceitando oscilações e possíveis perdas.", valor: "c" }
+    ]
+  },
+  {
+    texto: "Qual o seu nível de conhecimento sobre investimentos?",
+    opcoes: [
+      { label: "Nenhum ou muito baixo.", valor: "a" },
+      { label: "Intermediário.", valor: "b" },
+      { label: "Avançado – acompanho o mercado regularmente.", valor: "c" }
+    ]
+  },
+  {
+    texto: "Você já investiu em ações ou outros ativos de risco (fundos, FII, cripto)?",
+    opcoes: [
+      { label: "Nunca.", valor: "a" },
+      { label: "Sim, algumas vezes.", valor: "b" },
+      { label: "Sim, faço com frequência.", valor: "c" }
+    ]
+  },
+  {
+    texto: "Você acompanha notícias sobre o mercado financeiro?",
+    opcoes: [
+      { label: "Não acompanho.", valor: "a" },
+      { label: "De vez em quando.", valor: "b" },
+      { label: "Sim, estou sempre atualizado.", valor: "c" }
+    ]
+  },
+  // Perguntas opcionais (não contam na pontuação)
+  {
+    texto: "Sua idade:",
+    opcoes: [
+      { label: "Acima de 60 anos.", valor: "a" },
+      { label: "Entre 35 e 60 anos.", valor: "b" },
+      { label: "Menos de 35 anos.", valor: "c" }
+    ]
+  },
+  {
+    texto: "Sua renda mensal (opcional):",
+    opcoes: [
+      { label: "Até R$5.000", valor: "a" },
+      { label: "De R$5.000 a R$15.000", valor: "b" },
+      { label: "Acima de R$15.000", valor: "c" }
+    ]
+  },
+  {
+    texto: "Para quais objetivos você está investindo?",
+    opcoes: [
+      { label: "Reserva de emergência / Aposentadoria", valor: "a" },
+      { label: "Compra de imóvel / Estabilidade financeira", valor: "b" },
+      { label: "Aumento de patrimônio / Independência financeira rápida", valor: "c" }
+    ]
+  }
+];
+
+function renderPerfilPerguntaUnica(idx, respostaAtual) {
+  const pergunta = PERFIL_PERGUNTAS[idx];
+  const perguntaDiv = document.getElementById('perfil-pergunta-unica');
+  perguntaDiv.innerHTML = '';
+  const qTitle = document.createElement('p');
+  qTitle.innerHTML = `<strong>${idx + 1}. ${pergunta.texto}</strong>`;
+  perguntaDiv.appendChild(qTitle);
+  pergunta.opcoes.forEach((op, opIdx) => {
+    const opId = `perfil-q${idx}-op${opIdx}`;
+    const label = document.createElement('label');
+    label.htmlFor = opId;
+    label.style.display = 'block';
+    const input = document.createElement('input');
+    input.type = 'radio';
+    input.name = `perfil-q${idx}`;
+    input.value = op.valor;
+    input.id = opId;
+    if (respostaAtual === op.valor) input.checked = true;
+    label.appendChild(input);
+    label.appendChild(document.createTextNode(' ' + op.label));
+    perguntaDiv.appendChild(label);
+  });
+}
+
+function calcularPerfil(respostas) {
+  let pontos = 0;
+  for (let i = 0; i < 9; i++) {
+    if (respostas[i] === 'a') pontos += 1;
+    else if (respostas[i] === 'b') pontos += 2;
+    else if (respostas[i] === 'c') pontos += 3;
+  }
+  if (pontos <= 14) return 'conservador';
+  if (pontos <= 22) return 'moderado';
+  return 'arrojado';
+}
+
+function descricaoPerfil(tipo) {
+  if (tipo === 'conservador') return 'Perfil conservador: prioriza segurança e estabilidade, evita grandes oscilações e prefere investimentos de baixo risco.';
+  if (tipo === 'moderado') return 'Perfil moderado: busca equilíbrio entre segurança e retorno, aceita algum risco para obter ganhos superiores à renda fixa.';
+  return 'Perfil arrojado: tolera oscilações e perdas temporárias em busca de retornos elevados, investe em ativos de maior risco.';
+}
+
+function showPerfilModal(respostasSalvas = null, resultadoSalvo = null, mostrarResultadoDireto = false) {
+  const modal = document.getElementById('perfil-modal');
+  const introDiv = document.getElementById('perfil-intro');
+  const form = document.getElementById('perfil-form');
+  const perguntaDiv = document.getElementById('perfil-pergunta-unica');
+  const resultadoDiv = document.getElementById('perfil-resultado');
+  const classificacaoSpan = document.getElementById('perfil-classificacao');
+  const descricaoP = document.getElementById('perfil-descricao');
+  const refazerBtn = document.getElementById('perfil-refazer-btn');
+  const iniciarBtn = document.getElementById('perfil-iniciar-btn');
+  const cancelarBtn = document.getElementById('perfil-cancelar-btn');
+  const anteriorBtn = document.getElementById('perfil-anterior-btn');
+  const proximoBtn = document.getElementById('perfil-proximo-btn');
+  const enviarBtn = document.getElementById('perfil-enviar-btn');
+
+  let respostas = respostasSalvas ? [...respostasSalvas] : Array(PERFIL_PERGUNTAS.length).fill(null);
+  let perguntaAtual = 0;
+  let respondendo = false;
+
+  function mostrarIntro() {
+    introDiv.style.display = 'block';
+    form.style.display = 'none';
+    resultadoDiv.style.display = 'none';
+    refazerBtn.style.display = 'none';
+  }
+
+  function mostrarPergunta() {
+    introDiv.style.display = 'none';
+    form.style.display = 'block';
+    resultadoDiv.style.display = 'none';
+    refazerBtn.style.display = 'none';
+    renderPerfilPerguntaUnica(perguntaAtual, respostas[perguntaAtual]);
+    anteriorBtn.style.display = perguntaAtual > 0 ? 'inline-block' : 'none';
+    proximoBtn.style.display = perguntaAtual < PERFIL_PERGUNTAS.length - 1 ? 'inline-block' : 'none';
+    enviarBtn.style.display = perguntaAtual === PERFIL_PERGUNTAS.length - 1 ? 'inline-block' : 'none';
+    proximoBtn.disabled = true;
+    enviarBtn.disabled = true;
+    form.querySelectorAll('input[type=radio]').forEach(input => {
+      input.onchange = function() {
+        respostas[perguntaAtual] = this.value;
+        proximoBtn.disabled = false;
+        enviarBtn.disabled = false;
+      };
+      if (input.checked) {
+        proximoBtn.disabled = false;
+        enviarBtn.disabled = false;
+      }
+    });
+  }
+
+  function mostrarResultado(perfil) {
+    introDiv.style.display = 'none';
+    form.style.display = 'none';
+    resultadoDiv.style.display = 'block';
+    classificacaoSpan.textContent = perfil.charAt(0).toUpperCase() + perfil.slice(1);
+    descricaoP.textContent = descricaoPerfil(perfil);
+    refazerBtn.style.display = 'inline-block';
+  }
+
+  // Fluxo inicial
+  if (mostrarResultadoDireto && respostasSalvas && respostasSalvas.length >= 9) {
+    const perfil = calcularPerfil(respostasSalvas);
+    mostrarResultado(perfil);
+  } else if (!respostasSalvas) {
+    mostrarIntro();
+  } else {
+    perguntaAtual = 0;
+    respondendo = true;
+    mostrarPergunta();
+  }
+  modal.style.display = 'block';
+
+  if (iniciarBtn) iniciarBtn.onclick = function() {
+    perguntaAtual = 0;
+    respondendo = true;
+    mostrarPergunta();
+  };
+  if (cancelarBtn) cancelarBtn.onclick = function() {
+    modal.style.display = 'none';
+  };
+  anteriorBtn.onclick = function() {
+    if (perguntaAtual > 0) {
+      perguntaAtual--;
+      mostrarPergunta();
+    }
+  };
+  proximoBtn.onclick = function() {
+    if (respostas[perguntaAtual]) {
+      perguntaAtual++;
+      mostrarPergunta();
+    }
+  };
+  form.onsubmit = async function(e) {
+    e.preventDefault();
+    if (respostas.slice(0, 9).some(r => !r)) {
+      alert('Responda todas as perguntas obrigatórias.');
+      return;
+    }
+    const perfil = calcularPerfil(respostas);
+    mostrarResultado(perfil);
+    // Salvar no backend
+    try {
+      const token = getAuthToken();
+      await fetch('/api/user/perfil-investidor', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({
+          perfil_investidor: perfil,
+          perfil_respostas: respostas
+        })
+      });
+    } catch (e) {
+      alert('Erro ao salvar perfil.');
+    }
+  };
+  refazerBtn.onclick = function() {
+    respostas = Array(PERFIL_PERGUNTAS.length).fill(null);
+    perguntaAtual = 0;
+    respondendo = true;
+    mostrarPergunta();
+  };
+  document.getElementById('close-perfil-modal').onclick = function() {
+    modal.style.display = 'none';
+  };
+}
+
+// Exibir modal após login se não houver perfil
+async function checkPerfilInvestidor() {
+  const token = getAuthToken();
+  if (!token) return;
+  try {
+    const resp = await fetch('/api/user/perfil-investidor', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    const data = await resp.json();
+    if (!data.success || !data.perfil_investidor) {
+      showPerfilModal();
+    }
+  } catch (e) {
+    // Se erro, não faz nada
+  }
+}
+
+// Adicionar botão no menu do usuário para refazer análise
+function addPerfilMenuButton() {
+  const userDropdown = document.getElementById('user-dropdown');
+  if (!userDropdown) return;
+  let btn = document.getElementById('perfil-menu-btn');
+  if (!btn) {
+    btn = document.createElement('button');
+    btn.id = 'perfil-menu-btn';
+    btn.textContent = 'Análise de Perfil';
+    btn.onclick = async function() {
+      // Buscar respostas salvas para preencher
+      const token = getAuthToken();
+      let respostas = null, perfil = null;
+      try {
+        const resp = await fetch('/api/user/perfil-investidor', {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        const data = await resp.json();
+        if (data.success && data.perfil_respostas) {
+          respostas = data.perfil_respostas;
+          perfil = data.perfil_investidor;
+        }
+      } catch (e) {}
+      // Se já tem perfil, mostrar resultado direto com botão de refazer
+      if (respostas && respostas.length >= 9) {
+        showPerfilModal(respostas, perfil, true);
+      } else {
+        showPerfilModal(respostas, perfil, false);
+      }
+    };
+    userDropdown.appendChild(btn);
+  }
+}
+
+// Exibir metodologias recomendadas na tela de análise
+async function exibirMetodologiasRecomendadas() {
+  const container = document.getElementById('perfil-metodologias-recomendadas');
+  const select = document.getElementById('methodology');
+  if (!container || !select) return;
+  container.innerHTML = '';
+  select.innerHTML = '';
+  const token = getAuthToken();
+  if (!token) {
+    container.innerHTML = '<p>Faça login para ver recomendações personalizadas.</p>';
+    return;
+  }
+  try {
+    const resp = await fetch('/api/user/metodologias-recomendadas', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    const data = await resp.json();
+    if (!data.success) {
+      container.innerHTML = '<p>Não foi possível obter recomendações para seu perfil.</p>';
+      return;
+    }
+    const perfil = data.perfil;
+    const badge = `<span class="perfil-badge ${perfil}">(${perfil})</span>`;
+    container.innerHTML = `<p>Com base no seu perfil ${badge}, recomendamos as seguintes metodologias:</p>`;
+    const lista = document.createElement('ul');
+    lista.style.marginTop = '1em';
+    data.metodologias.forEach(m => {
+      const li = document.createElement('li');
+      li.innerHTML = `<strong>${m.nome}</strong>: ${m.descricao}`;
+      lista.appendChild(li);
+      // Adicionar opção ao select
+      const opt = document.createElement('option');
+      opt.value = m.valor || m.nome; // Usar valor padronizado do backend
+      opt.textContent = m.nome;
+      select.appendChild(opt);
+    });
+    container.appendChild(lista);
+  } catch (e) {
+    container.innerHTML = '<p>Erro ao buscar recomendações.</p>';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  checkPerfilInvestidor();
+  addPerfilMenuButton();
+  // Exibir metodologias recomendadas ao carregar a tela de análise
+  if (document.getElementById('perfil-metodologias-recomendadas')) {
+    exibirMetodologiasRecomendadas();
+  }
+});
 
