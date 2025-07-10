@@ -1,0 +1,257 @@
+name: Security Scanning
+
+on:
+  push:
+    branches: [ master, develop ]
+  pull_request:
+    branches: [ master, develop ]
+  schedule:
+    # Run security scans daily at 2 AM UTC
+    - cron: '0 2 * * *'
+
+jobs:
+  dependency-check:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.11
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install safety pip-audit
+    
+    - name: Run Safety check
+      run: |
+        find . -name "requirements.txt" -exec safety check -r {} \; || true
+    
+    - name: Run pip-audit
+      run: |
+        find . -name "requirements.txt" -exec pip-audit -r {} \; || true
+    
+    - name: Upload dependency scan results
+      uses: actions/upload-artifact@v3
+      with:
+        name: dependency-scan-results
+        path: |
+          safety-report.json
+          pip-audit-report.json
+
+  code-security-scan:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.11
+    
+    - name: Install security tools
+      run: |
+        python -m pip install --upgrade pip
+        pip install bandit semgrep
+    
+    - name: Run Bandit security scan
+      run: |
+        bandit -r . -f json -o bandit-report.json -ll || true
+    
+    - name: Run Semgrep security scan
+      run: |
+        semgrep --config=auto --json --output=semgrep-report.json . || true
+    
+    - name: Upload code security scan results
+      uses: actions/upload-artifact@v3
+      with:
+        name: code-security-scan-results
+        path: |
+          bandit-report.json
+          semgrep-report.json
+
+  container-security-scan:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [auth-service, data-service, methodology-service, analysis-service]
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Build Docker image
+      run: |
+        if [ -f "services/${{ matrix.service }}/Dockerfile" ]; then
+          docker build -t ${{ matrix.service }}:latest -f services/${{ matrix.service }}/Dockerfile .
+        elif [ -f "microservices/${{ matrix.service }}/Dockerfile" ]; then
+          docker build -t ${{ matrix.service }}:latest -f microservices/${{ matrix.service }}/Dockerfile .
+        fi
+    
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: '${{ matrix.service }}:latest'
+        format: 'sarif'
+        output: 'trivy-${{ matrix.service }}.sarif'
+    
+    - name: Upload Trivy scan results
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: 'trivy-${{ matrix.service }}.sarif'
+    
+    - name: Run Snyk container scan
+      uses: snyk/actions/docker@master
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      with:
+        image: '${{ matrix.service }}:latest'
+        args: --severity-threshold=high --file=Dockerfile
+      continue-on-error: true
+
+  secrets-scan:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Run TruffleHog secrets scan
+      uses: trufflesecurity/trufflehog@main
+      with:
+        path: ./
+        base: main
+        head: HEAD
+        extra_args: --debug --only-verified
+    
+    - name: Run GitLeaks secrets scan
+      uses: gitleaks/gitleaks-action@v2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+
+  infrastructure-security:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Terraform
+      uses: hashicorp/setup-terraform@v2
+      with:
+        terraform_version: 1.5.0
+    
+    - name: Run Checkov IaC security scan
+      uses: bridgecrewio/checkov-action@master
+      with:
+        directory: .
+        framework: terraform,dockerfile,kubernetes
+        output_format: sarif
+        output_file_path: checkov-report.sarif
+    
+    - name: Upload Checkov scan results
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: checkov-report.sarif
+    
+    - name: Run Terrascan
+      uses: tenable/terrascan-action@main
+      with:
+        iac_type: 'terraform'
+        iac_version: 'v14'
+        policy_type: 'aws'
+        only_warn: true
+
+  compliance-check:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: OWASP Dependency Check
+      uses: dependency-check/Dependency-Check_Action@main
+      with:
+        project: 'agente-investidor'
+        path: '.'
+        format: 'ALL'
+        args: >
+          --enableRetired
+          --enableExperimental
+          --nvdApiKey ${{ secrets.NVD_API_KEY }}
+    
+    - name: Upload OWASP Dependency Check results
+      uses: actions/upload-artifact@v3
+      with:
+        name: dependency-check-report
+        path: reports/
+    
+    - name: CIS Kubernetes Benchmark
+      run: |
+        # Install kube-bench
+        curl -L https://github.com/aquasecurity/kube-bench/releases/latest/download/kube-bench_0.6.15_linux_amd64.tar.gz -o kube-bench.tar.gz
+        tar -xvf kube-bench.tar.gz
+        
+        # Run CIS benchmark (if Kubernetes manifests exist)
+        if [ -d "k8s/" ]; then
+          ./kube-bench run --targets node,policies,managedservices --benchmark cis-1.23 --outputfile cis-benchmark-report.json --json
+        fi
+    
+    - name: Upload CIS benchmark results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: cis-benchmark-report
+        path: cis-benchmark-report.json
+
+  security-report:
+    needs: [dependency-check, code-security-scan, container-security-scan, secrets-scan, infrastructure-security, compliance-check]
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@v3
+    
+    - name: Generate security report
+      run: |
+        echo "# Security Scan Report" > security-report.md
+        echo "Generated on: $(date)" >> security-report.md
+        echo "" >> security-report.md
+        
+        echo "## Summary" >> security-report.md
+        echo "- Dependency Check: ${{ needs.dependency-check.result }}" >> security-report.md
+        echo "- Code Security Scan: ${{ needs.code-security-scan.result }}" >> security-report.md
+        echo "- Container Security Scan: ${{ needs.container-security-scan.result }}" >> security-report.md
+        echo "- Secrets Scan: ${{ needs.secrets-scan.result }}" >> security-report.md
+        echo "- Infrastructure Security: ${{ needs.infrastructure-security.result }}" >> security-report.md
+        echo "- Compliance Check: ${{ needs.compliance-check.result }}" >> security-report.md
+        echo "" >> security-report.md
+        
+        echo "## Recommendations" >> security-report.md
+        echo "1. Review all HIGH and CRITICAL vulnerabilities" >> security-report.md
+        echo "2. Update dependencies with known vulnerabilities" >> security-report.md
+        echo "3. Implement security fixes before deployment" >> security-report.md
+        echo "4. Monitor security advisories for used packages" >> security-report.md
+    
+    - name: Upload security report
+      uses: actions/upload-artifact@v3
+      with:
+        name: security-report
+        path: security-report.md
+    
+    - name: Notify security team
+      if: contains(needs.*.result, 'failure')
+      uses: 8398a7/action-slack@v3
+      with:
+        status: failure
+        text: "🚨 Security vulnerabilities detected in Agente Investidor! Please review the security report."
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SECURITY_SLACK_WEBHOOK_URL }}
+

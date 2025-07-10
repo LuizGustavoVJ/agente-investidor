@@ -1,0 +1,75 @@
+server.name: "agente-investidor-kibana"
+server.host: "0.0.0.0"
+server.port: 5601
+
+elasticsearch.hosts: ["http://elasticsearch:9200"]
+elasticsearch.username: ""
+elasticsearch.password: ""
+
+# Monitoring
+monitoring.ui.container.elasticsearch.enabled: true
+monitoring.ui.container.logstash.enabled: true
+
+# Security
+xpack.security.enabled: false
+xpack.encryptedSavedObjects.encryptionKey: "agente-investidor-kibana-encryption-key-32-chars"
+
+# Logging
+logging.appenders.file.type: file
+logging.appenders.file.fileName: /usr/share/kibana/logs/kibana.log
+logging.appenders.file.layout.type: json
+logging.root.level: info
+
+# UI Settings
+server.basePath: ""
+server.rewriteBasePath: false
+
+# Index patterns
+kibana.index: ".kibana"
+kibana.defaultAppId: "discover"
+
+# Advanced settings
+elasticsearch.requestTimeout: 30000
+elasticsearch.shardTimeout: 30000
+elasticsearch.pingTimeout: 1500
+
+# Maps
+map.includeElasticMapsService: false
+
+# Telemetry
+telemetry.enabled: false
+telemetry.optIn: false
+
+# Saved objects
+savedObjects.maxImportPayloadBytes: 26214400
+
+# Data views
+data.search.aggs.shardDelay.enabled: true
+
+# Reporting
+xpack.reporting.enabled: false
+
+# Canvas
+xpack.canvas.enabled: true
+
+# Machine Learning
+xpack.ml.enabled: false
+
+# APM
+xpack.apm.enabled: false
+
+# Uptime
+xpack.uptime.enabled: false
+
+# SIEM
+xpack.siem.enabled: false
+
+# Spaces
+xpack.spaces.enabled: false
+
+# Graph
+xpack.graph.enabled: false
+
+# Watcher
+xpack.watcher.enabled: false
+
