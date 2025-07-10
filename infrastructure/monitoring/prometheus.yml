@@ -1,0 +1,50 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Agente Investidor - Aplicação Principal
+  - job_name: 'agente-investidor'
+    static_configs:
+      - targets: ['agente-investidor:5000']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  # Serviço de Autenticação (quando implementado)
+  - job_name: 'auth-service'
+    static_configs:
+      - targets: ['auth-service:8001']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  # Serviço de Dados Externos (quando implementado)
+  - job_name: 'data-service'
+    static_configs:
+      - targets: ['data-service:8002']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  # PostgreSQL Exporter
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+
+  # Redis Exporter
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+
+  # Node Exporter (métricas do sistema)
+  - job_name: 'node'
+    static_configs:
+      - targets: ['node-exporter:9100']
+
