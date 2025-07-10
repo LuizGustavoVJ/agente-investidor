@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro - Agente Investidor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <script src="https://kit.fontawesome.com/1c2e7e2e2e.js" crossorigin="anonymous"></script>
+</head>
+<body>
+    <div class="container" style="max-width: 400px; margin-top: 80px;">
+        <div class="analysis-form">
+            <h2 class="section-title" style="color:#667eea; font-size:2rem; margin-bottom:2rem;">Cadastro</h2>
+            <form id="cadastro-form" method="POST">
+                <div class="form-group">
+                    <label for="cadastro-username">Usuário</label>
+                    <input type="text" id="cadastro-username" name="username" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label for="cadastro-email">E-mail</label>
+                    <input type="email" id="cadastro-email" name="email" class="form-input" required>
+                </div>
+                <div class="form-group" style="position:relative;">
+                    <label for="cadastro-password">Senha</label>
+                    <input type="password" id="cadastro-password" name="password" class="form-input" required>
+                    <span class="toggle-password" onclick="togglePassword('cadastro-password', this)"><i class="fas fa-eye"></i></span>
+                </div>
+                <button type="submit" class="btn btn-primary" id="cadastro-submit-btn">Cadastrar</button>
+                <p class="form-hint" style="margin-top:1rem;">Já tem conta? <a href="/login">Entrar</a></p>
+                <p class="form-hint msg-destaque" id="cadastro-error-msg" style="display:none;"></p>
+                <p class="form-hint msg-destaque" id="cadastro-success-msg" style="display:none;"></p>
+            </form>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script>
+    function togglePassword(inputId, el) {
+        const input = document.getElementById(inputId);
+        if (input.type === 'password') {
+            input.type = 'text';
+            el.innerHTML = '<i class="fas fa-eye-slash"></i>';
+        } else {
+            input.type = 'password';
+            el.innerHTML = '<i class="fas fa-eye"></i>';
+        }
+    }
+    </script>
+</body>
+</html> 

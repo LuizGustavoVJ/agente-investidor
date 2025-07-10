@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agente Investidor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <script src="https://kit.fontawesome.com/1c2e7e2e2e.js" crossorigin="anonymous"></script>
+    <!-- Chart.js para gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chart.js plugins para funcionalidades avançadas -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom"></script>
+</head>
+<body>
+    <header class="header">
+        <div class="container header-content">
+            <div class="logo">
+                <i class="fas fa-chart-line"></i> Agente Investidor
+            </div>
+            <nav class="nav">
+                <a href="#" class="nav-link" onclick="showSection('home')">Home</a>
+                <a href="#" class="nav-link" onclick="showSection('dashboard')">Dashboard</a>
+                <a href="#" class="nav-link" onclick="showSection('analise')">Análise</a>
+                <a href="#" class="nav-link" onclick="showSection('chat')">Chat</a>
+                <a href="#" class="nav-link" onclick="showSection('metodologias')">Metodologias</a>
+                <div id="user-menu" class="user-menu" style="display:none; position:relative;">
+                    <span id="user-info" class="nav-link user-info" style="cursor:pointer;"></span>
+                    <div id="user-dropdown" class="user-dropdown" style="display:block; position:absolute; right:0; text-align:left;  color:rgba(114, 152, 207, 0.1); min-width:120px;">
+                        <a href="#" id="menu-logout" class="nav-link" style="color:#ef4444; display:block; text-align:left;">Logout</a>
+                    </div>
+                </div>
+                <a href="/login" class="nav-link" id="menu-login">Login</a>
+                <a href="/cadastro" class="nav-link" id="menu-cadastro">Cadastro</a>
+            </nav>
+        </div>
+    </header>
+    <main class="main">
+           <!-- Home Section -->
+           <section id="home" class="section active">
+            <div class="container">
+                <div class="hero">
+                    <div class="hero-content">
+                        <h1 class="hero-title">
+                            Seu Mentor Pessoal em <span class="highlight">Investimentos</span>
+                        </h1>
+                        <p class="hero-description">
+                            Baseado nas metodologias dos maiores investidores do mundo como Warren Buffett, 
+                            Benjamin Graham, Peter Lynch e outros. Análise fundamentalista profissional 
+                            com dados em tempo real da B3 e mercados internacionais.
+                        </p>
+                        <div class="hero-actions">
+                            <button class="btn btn-primary" onclick="showSection('analise')">
+                                <i class="fas fa-chart-bar"></i>
+                                Analisar Ação
+                            </button>
+                            <button class="btn btn-secondary" onclick="showSection('chat')">
+                                <i class="fas fa-comments"></i>
+                                Chat com Agente
+                            </button>
+                        </div>
+                    </div>
+                    <div class="hero-stats">
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3>14</h3>
+                                <p>Grandes Investidores</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-brain"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3>4</h3>
+                                <p>Metodologias de Análise</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-globe"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3>B3 + Global</h3>
+                                <p>Mercados Cobertos</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Investidores Famosos -->
+                <div class="investors-section">
+                    <h2 class="section-title">Baseado nos Maiores Investidores</h2>
+                    <div class="investors-grid">
+                        <div class="investor-card">
+                            <div class="investor-avatar">
+                                <i class="fas fa-user-tie"></i>
+                            </div>
+                            <h3>Warren Buffett</h3>
+                            <p>Value Investing</p>
+                            <span class="investor-tag">Oráculo de Omaha</span>
+                        </div>
+                        <div class="investor-card">
+                            <div class="investor-avatar">
+                                <i class="fas fa-graduation-cap"></i>
+                            </div>
+                            <h3>Benjamin Graham</h3>
+                            <p>Pai do Value Investing</p>
+                            <span class="investor-tag">Margem de Segurança</span>
+                        </div>
+                        <div class="investor-card">
+                            <div class="investor-avatar">
+                                <i class="fas fa-rocket"></i>
+                            </div>
+                            <h3>Peter Lynch</h3>
+                            <p>Growth at Reasonable Price</p>
+                            <span class="investor-tag">PEG < 1</span>
+                        </div>
+                        <div class="investor-card">
+                            <div class="investor-avatar">
+                                <i class="fas fa-coins"></i>
+                            </div>
+                            <h3>Luiz Barsi</h3>
+                            <p>Rei dos Dividendos</p>
+                            <span class="investor-tag">Renda Passiva</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Dashboard Section -->
+        <section id="dashboard" class="section">
+            <div class="container">
+                <h2 class="section-title">Dashboard de Mercado</h2>
+                
+                <!-- Resumo do Mercado -->
+                <div class="market-summary">
+                    <div class="summary-cards">
+                        <div class="summary-card">
+                            <div class="card-icon">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div class="card-content">
+                                <h3 id="ibovespa-value">Loading...</h3>
+                                <p>Ibovespa</p>
+                                <span id="ibovespa-change" class="change-indicator">+0.00%</span>
+                            </div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="card-icon">
+                                <i class="fas fa-dollar-sign"></i>
+                            </div>
+                            <div class="card-content">
+                                <h3 id="dolar-value">Loading...</h3>
+                                <p>USD/BRL</p>
+                                <span id="dolar-change" class="change-indicator">+0.00%</span>
+                            </div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="card-icon">
+                                <i class="fas fa-percentage"></i>
+                            </div>
+                            <div class="card-content">
+                                <h3 id="selic-value">Loading...</h3>
+                                <p>Taxa Selic</p>
+                                <span class="change-indicator">a.a.</span>
+                            </div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="card-icon">
+                                <i class="fas fa-fire"></i>
+                            </div>
+                            <div class="card-content">
+                                <h3 id="volume-value">Loading...</h3>
+                                <p>Volume B3</p>
+                                <span class="change-indicator">bilhões</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gráficos Principais -->
+                <div class="dashboard-charts">
+                    <div class="chart-row">
+                        <div class="chart-container">
+                            <div class="chart-header">
+                                <h3>Ibovespa - Últimos 30 dias</h3>
+                                <div class="chart-controls">
+                                    <button class="chart-btn active" onclick="updateIbovespaChart('1M')">1M</button>
+                                    <button class="chart-btn" onclick="updateIbovespaChart('3M')">3M</button>
+                                    <button class="chart-btn" onclick="updateIbovespaChart('6M')">6M</button>
+                                    <button class="chart-btn" onclick="updateIbovespaChart('1Y')">1A</button>
+                                </div>
+                            </div>
+                            <canvas id="ibovespaChart"></canvas>
+                        </div>
+                        <div class="chart-container">
+                            <div class="chart-header">
+                                <h3>Setores em Destaque</h3>
+                                <div class="chart-controls">
+                                    <button class="chart-btn active" onclick="updateSectorChart('performance')">Performance</button>
+                                    <button class="chart-btn" onclick="updateSectorChart('volume')">Volume</button>
+                                </div>
+                            </div>
+                            <canvas id="sectorChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-row">
+                        <div class="chart-container">
+                            <div class="chart-header">
+                                <h3>Top Ações - Maiores Altas</h3>
+                                <div class="chart-controls">
+                                    <button class="chart-btn active" onclick="updateTopStocks('gainers')">Altas</button>
+                                    <button class="chart-btn" onclick="updateTopStocks('losers')">Baixas</button>
+                                    <button class="chart-btn" onclick="updateTopStocks('volume')">Volume</button>
+                                </div>
+                            </div>
+                            <canvas id="topStocksChart"></canvas>
+                        </div>
+                        <div class="chart-container">
+                            <div class="chart-header">
+                                <h3>Análise de Volatilidade</h3>
+                                <div class="chart-controls">
+                                    <button class="chart-btn active" onclick="updateVolatilityChart('daily')">Diária</button>
+                                    <button class="chart-btn" onclick="updateVolatilityChart('weekly')">Semanal</button>
+                                </div>
+                            </div>
+                            <canvas id="volatilityChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabela de Ações em Destaque -->
+                <div class="featured-stocks">
+                    <div class="table-header">
+                        <h3>Ações em Destaque</h3>
+                        <div class="table-controls">
+                            <button class="table-btn active" onclick="updateFeaturedStocks('recommended')">Recomendadas</button>
+                            <button class="table-btn" onclick="updateFeaturedStocks('trending')">Em Alta</button>
+                            <button class="table-btn" onclick="updateFeaturedStocks('dividends')">Dividendos</button>
+                        </div>
+                    </div>
+                    <div class="stocks-table-container">
+                        <table class="stocks-table" id="featuredStocksTable">
+                            <thead>
+                                <tr>
+                                    <th>Ação</th>
+                                    <th>Preço</th>
+                                    <th>Variação</th>
+                                    <th>Volume</th>
+                                    <th>P/E</th>
+                                    <th>Div. Yield</th>
+                                    <th>Score</th>
+                                    <th>Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody id="featuredStocksBody">
+                                <!-- Dados serão carregados via JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Indicadores Econômicos -->
+                <div class="economic-indicators">
+                    <h3>Indicadores Econômicos</h3>
+                    <div class="indicators-grid">
+                        <div class="indicator-card">
+                            <div class="indicator-header">
+                                <h4>IPCA (Inflação)</h4>
+                                <span id="ipca-value" class="indicator-value">Loading...</span>
+                            </div>
+                            <canvas id="ipcaChart" class="mini-chart"></canvas>
+                        </div>
+                        <div class="indicator-card">
+                            <div class="indicator-header">
+                                <h4>PIB</h4>
+                                <span id="pib-value" class="indicator-value">Loading...</span>
+                            </div>
+                            <canvas id="pibChart" class="mini-chart"></canvas>
+                        </div>
+                        <div class="indicator-card">
+                            <div class="indicator-header">
+                                <h4>Desemprego</h4>
+                                <span id="unemployment-value" class="indicator-value">Loading...</span>
+                            </div>
+                            <canvas id="unemploymentChart" class="mini-chart"></canvas>
+                        </div>
+                        <div class="indicator-card">
+                            <div class="indicator-header">
+                                <h4>Commodities</h4>
+                                <span id="commodities-value" class="indicator-value">Loading...</span>
+                            </div>
+                            <canvas id="commoditiesChart" class="mini-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Análise Section -->
+        <section id="analise" class="section">
+            <div class="container">
+                <h2 class="section-title">Análise de Ações</h2>
+                <div id="perfil-metodologias-recomendadas" class="perfil-metodologias-recomendadas" style="margin-bottom:2em;"></div>
+                <div class="analysis-form">
+                    <div class="form-group">
+                        <label for="stock-select">Selecione a Ação</label>
+                        <select id="stock-select" class="form-select">
+                            <option value="">Carregando ações...</option>
+                        </select>
+                        <small class="form-hint">Para ações brasileiras, o sufixo .SA já está incluso</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="methodology">Metodologia de Análise</label>
+                        <select id="methodology" class="form-select">
+                            <option value="warren_buffett">Warren Buffett - Value Investing</option>
+                            <option value="benjamin_graham">Benjamin Graham - Defensive Value</option>
+                            <option value="peter_lynch">Peter Lynch - Growth at Reasonable Price</option>
+                            <option value="dividendos">Foco em Dividendos - Barsi/Weiss</option>
+                        </select>
+                    </div>
+                    
+                    <button class="btn btn-primary btn-analyze" onclick="analyzeStock()">
+                        <i class="fas fa-search"></i>
+                        Analisar Ação
+                    </button>
+                </div>
+
+                <!-- Resultados da Análise -->
+                <div id="analysis-results" class="analysis-results" style="display: none;">
+                    <div class="result-header">
+                        <h3 id="result-symbol"></h3>
+                        <div class="result-score">
+                            <span id="result-score-value"></span>
+                            <span class="score-label">/100</span>
+                        </div>
+                    </div>
+                    
+                    <div class="result-recommendation">
+                        <span id="result-recommendation" class="recommendation-badge"></span>
+                    </div>
+                    
+                    <div class="result-details">
+                        <div class="detail-section">
+                            <h4><i class="fas fa-thumbs-up"></i> Pontos Fortes</h4>
+                            <ul id="result-strengths"></ul>
+                        </div>
+                        
+                        <div class="detail-section">
+                            <h4><i class="fas fa-exclamation-triangle"></i> Pontos de Atenção</h4>
+                            <ul id="result-weaknesses"></ul>
+                        </div>
+                    </div>
+                    
+                    <div class="result-footer">
+                        <div class="result-info">
+                            <span><strong>Metodologia:</strong> <span id="result-methodology"></span></span>
+                            <span><strong>Preço Atual:</strong> R$ <span id="result-current-price"></span></span>
+                            <span id="result-target-price" style="display: none;"><strong>Preço Alvo:</strong> R$ <span id="target-price-value"></span></span>
+                        </div>
+                        <p id="result-justification" class="result-justification"></p>
+                    </div>
+                </div>
+
+                <!-- Gráficos da Ação Analisada -->
+                <div id="stock-charts" class="stock-charts" style="display: none;">
+                    <h3>Análise Gráfica - <span id="chart-stock-symbol"></span></h3>
+                    
+                    <div class="analysis-charts">
+                        <div class="chart-row">
+                            <div class="chart-container">
+                                <div class="chart-header">
+                                    <h4>Histórico de Preços</h4>
+                                    <div class="chart-controls">
+                                        <button class="chart-btn active" onclick="updateStockChart('1M')">1M</button>
+                                        <button class="chart-btn" onclick="updateStockChart('3M')">3M</button>
+                                        <button class="chart-btn" onclick="updateStockChart('6M')">6M</button>
+                                        <button class="chart-btn" onclick="updateStockChart('1Y')">1A</button>
+                                        <button class="chart-btn" onclick="updateStockChart('2Y')">2A</button>
+                                    </div>
+                                </div>
+                                <canvas id="stockPriceChart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <div class="chart-row">
+                            <div class="chart-container">
+                                <div class="chart-header">
+                                    <h4>Volume de Negociação</h4>
+                                </div>
+                                <canvas id="stockVolumeChart"></canvas>
+                            </div>
+                            <div class="chart-container">
+                                <div class="chart-header">
+                                    <h4>Indicadores Técnicos</h4>
+                                    <div class="chart-controls">
+                                        <button class="chart-btn active" onclick="updateTechnicalChart('rsi')">RSI</button>
+                                        <button class="chart-btn" onclick="updateTechnicalChart('macd')">MACD</button>
+                                        <button class="chart-btn" onclick="updateTechnicalChart('bollinger')">Bollinger</button>
+                                    </div>
+                                </div>
+                                <canvas id="technicalChart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <div class="chart-row">
+                            <div class="chart-container">
+                                <div class="chart-header">
+                                    <h4>Comparação com Índices</h4>
+                                    <div class="chart-controls">
+                                        <button class="chart-btn active" onclick="updateComparisonChart('ibovespa')">Ibovespa</button>
+                                        <button class="chart-btn" onclick="updateComparisonChart('sector')">Setor</button>
+                                        <button class="chart-btn" onclick="updateComparisonChart('peers')">Concorrentes</button>
+                                    </div>
+                                </div>
+                                <canvas id="comparisonChart"></canvas>
+                            </div>
+                            <div class="chart-container">
+                                <div class="chart-header">
+                                    <h4>Análise Fundamentalista</h4>
+                                </div>
+                                <canvas id="fundamentalsChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Métricas Detalhadas -->
+                    <div class="detailed-metrics">
+                        <h4>Métricas Detalhadas</h4>
+                        <div class="metrics-grid">
+                            <div class="metric-card">
+                                <h5>Valuation</h5>
+                                <div class="metric-item">
+                                    <span>P/E Ratio:</span>
+                                    <span id="metric-pe">-</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span>P/B Ratio:</span>
+                                    <span id="metric-pb">-</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span>PEG Ratio:</span>
+                                    <span id="metric-peg">-</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span>EV/EBITDA:</span>
+                                    <span id="metric-ev-ebitda">-</span>
+                                </div>
+                            </div>
+                            
+                            <div class="metric-card">
+                                <h5>Rentabilidade</h5>
+                                <div class="metric-item">
+                                    <span>ROE:</span>
+                                    <span id="metric-roe">-</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span>ROA:</span>
+                                    <span id="metric-roa">-</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span>ROIC:</span>
+                                    <span id="metric-roic">-</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span>Margem Líquida:</span>
+                                    <span id="metric-margin">-</span>
+                                </div>
+                            </div>
+                            
+                            <div class="metric-card">
+                                <h5>Endividamento</h5>
+                                <div class="metric-item">
+                                    <span>Dívida/Patrimônio:</span>
+                                    <span id="metric-debt-equity">-</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span>Liquidez Corrente:</span>
+                                    <span id="metric-current-ratio">-</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span>Dívida Líquida/EBITDA:</span>
+                                    <span id="metric-net-debt-ebitda">-</span>
+                                </div>
+                            </div>
+                            
+                            <div class="metric-card">
+                                <h5>Crescimento</h5>
+                                <div class="metric-item">
+                                    <span>Crescimento Receita:</span>
+                                    <span id="metric-revenue-growth">-</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span>Crescimento Lucro:</span>
+                                    <span id="metric-earnings-growth">-</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span>Dividend Yield:</span>
+                                    <span id="metric-dividend-yield">-</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Loading -->
+                <div id="analysis-loading" class="loading" style="display: none;">
+                    <div class="loading-spinner"></div>
+                    <p>Analisando ação...</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Chat Section -->
+        <section id="chat" class="section">
+            <div class="container">
+                <h2 class="section-title">Chat com o Agente Investidor</h2>
+                
+                <div class="chat-container">
+                    <div class="chat-messages" id="chat-messages">
+                        <div class="message agent-message">
+                            <div class="message-avatar">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <div class="message-content">
+                                <p>Olá! Sou seu agente investidor pessoal. Como posso ajudá-lo hoje?</p>
+                                <div class="message-suggestions">
+                                    <button class="suggestion-btn" onclick="sendMessage('Como Warren Buffett analisa ações?')">
+                                        Como Warren Buffett analisa ações?
+                                    </button>
+                                    <button class="suggestion-btn" onclick="sendMessage('O que é P/E ratio?')">
+                                        O que é P/E ratio?
+                                    </button>
+                                    <button class="suggestion-btn" onclick="sendMessage('Como começar a investir?')">
+                                        Como começar a investir?
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="chat-input-container">
+                        <div class="chat-input-wrapper">
+                            <input type="text" id="chat-input" placeholder="Digite sua pergunta sobre investimentos..." class="chat-input">
+                            <button class="chat-send-btn" onclick="sendChatMessage()">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Metodologias Section -->
+        <section id="metodologias" class="section">
+            <div class="container">
+                <h2 class="section-title">Metodologias de Investimento</h2>
+                
+                <div class="methodologies-grid">
+                    <div class="methodology-card">
+                        <div class="methodology-header">
+                            <h3>Warren Buffett</h3>
+                            <span class="methodology-type">Value Investing</span>
+                        </div>
+                        <div class="methodology-content">
+                            <p>Foco em empresas com vantagem competitiva sustentável, gestão de qualidade e preço razoável.</p>
+                            <div class="methodology-indicators">
+                                <span class="indicator">P/E < 25</span>
+                                <span class="indicator">ROE > 15%</span>
+                                <span class="indicator">D/E < 0.5</span>
+                                <span class="indicator">FCF Positivo</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="methodology-card">
+                        <div class="methodology-header">
+                            <h3>Benjamin Graham</h3>
+                            <span class="methodology-type">Defensive Value</span>
+                        </div>
+                        <div class="methodology-content">
+                            <p>Segurança do principal e margem de segurança são prioridades absolutas.</p>
+                            <div class="methodology-indicators">
+                                <span class="indicator">P/E < 15</span>
+                                <span class="indicator">P/B < 1.5</span>
+                                <span class="indicator">Current Ratio > 2</span>
+                                <span class="indicator">Margem Segurança</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="methodology-card">
+                        <div class="methodology-header">
+                            <h3>Peter Lynch</h3>
+                            <span class="methodology-type">Growth at Reasonable Price</span>
+                        </div>
+                        <div class="methodology-content">
+                            <p>Invista no que você conhece e busque crescimento a preço razoável.</p>
+                            <div class="methodology-indicators">
+                                <span class="indicator">PEG < 1</span>
+                                <span class="indicator">Crescimento > 15%</span>
+                                <span class="indicator">Empresas Conhecidas</span>
+                                <span class="indicator">Small Caps</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="methodology-card">
+                        <div class="methodology-header">
+                            <h3>Foco em Dividendos</h3>
+                            <span class="methodology-type">Income Investing</span>
+                        </div>
+                        <div class="methodology-content">
+                            <p>Geração de renda passiva através de dividendos consistentes e crescentes.</p>
+                            <div class="methodology-indicators">
+                                <span class="indicator">DY > 4%</span>
+                                <span class="indicator">Payout < 80%</span>
+                                <span class="indicator">ROE > 12%</span>
+                                <span class="indicator">Histórico Consistente</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>Agente Investidor</h4>
+                    <p>Seu mentor pessoal baseado nas metodologias dos maiores investidores do mundo.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Recursos</h4>
+                    <ul>
+                        <li><a href="#analise">Análise de Ações</a></li>
+                        <li><a href="#chat">Chat Inteligente</a></li>
+                        <li><a href="#metodologias">Metodologias</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Dados</h4>
+                    <ul>
+                        <li>B3 - Bolsa do Brasil</li>
+                        <li>Yahoo Finance</li>
+                        <li>Dados em Tempo Real</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Agente Investidor. Desenvolvido por Luiz Gustavo Finotello.</p>
+            </div>
+        </div>
+    </footer>
+    <!-- Modal de Perfil de Investidor -->
+    <div id="perfil-modal" class="modal" style="display:none;">
+      <div class="modal-content">
+        <span class="close" id="close-perfil-modal">&times;</span>
+        <div style="height: 2em;"></div>
+        <div id="perfil-intro" style="display:none;">
+          <h2>Perfil de Investidor</h2>
+          <p>Você ainda não tem um perfil de investidor.<br>Responda o questionário a seguir para criar o seu perfil.</p>
+          <div style="margin-top:2em; text-align:center;">
+            <button id="perfil-iniciar-btn" class="btn btn-primary">Responder</button>
+            <button id="perfil-cancelar-btn" class="btn btn-secondary">Cancelar</button>
+          </div>
+        </div>
+        <form id="perfil-form" style="display:none;">
+          <div id="perfil-pergunta-unica"></div>
+          <div style="margin-top:1.5em; text-align:right;">
+            <button type="button" id="perfil-anterior-btn" class="btn btn-secondary" style="display:none;">Anterior</button>
+            <button type="button" id="perfil-proximo-btn" class="btn btn-primary">Próximo</button>
+            <button type="submit" id="perfil-enviar-btn" class="btn btn-primary" style="display:none;">Enviar</button>
+          </div>
+        </form>
+        <div id="perfil-resultado" style="display:none;">
+          <h3>Seu perfil: <span id="perfil-classificacao"></span></h3>
+          <p id="perfil-descricao"></p>
+          <button id="perfil-refazer-btn" class="btn btn-secondary" style="display:none;">Refazer análise</button>
+        </div>
+      </div>
+    </div>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
