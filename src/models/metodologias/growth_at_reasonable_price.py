@@ -1,7 +1,7 @@
 from src.models.dto import DadosFinanceiros, AnaliseResultado
 
 class GrowthAtReasonablePrice:
-    nome = "Growth at Reasonable Price"
+    nome = "peter_lynch"
     descricao = (
         "Crescimento dentro de valor, análise de PEG, foco em small caps promissoras "
         "e produtos familiares ao investidor."

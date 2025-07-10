@@ -2,7 +2,7 @@ from src.models.dto import DadosFinanceiros, AnaliseResultado
 from src.models.finance_utils import calcular_margem_seguranca
 
 class DefensiveValue:
-    nome = "Defensive Value"
+    nome = "benjamin_graham"
     descricao = (
         "Foco em segurança do principal, análise fundamentalista, "
         "margem de segurança, empresas com dívida controlada."

@@ -8,6 +8,10 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(128), nullable=False)
     is_active = db.Column(db.Boolean, default=True)
+    # Perfil do investidor: 'conservador', 'moderado', 'arrojado'
+    perfil_investidor = db.Column(db.String(20), nullable=True)
+    # Respostas do questionário de perfil (JSON)
+    perfil_respostas = db.Column(db.JSON, nullable=True)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -23,5 +27,7 @@ class User(db.Model):
             'id': self.id,
             'username': self.username,
             'email': self.email,
-            'is_active': self.is_active
+            'is_active': self.is_active,
+            'perfil_investidor': self.perfil_investidor,
+            'perfil_respostas': self.perfil_respostas
         }

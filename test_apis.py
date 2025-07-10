@@ -172,48 +172,92 @@ def test_analise_financeira():
     print(f"   P/E: {dados_teste.pe_ratio}")
     print(f"   ROE: {dados_teste.roe}%")
     print(f"   Dividend Yield: {dados_teste.dividend_yield}%")
-    
-    # Teste 1: Análise Warren Buffett
-    print("\n🎯 Teste 1: Análise Warren Buffett")
-    try:
-        resultado_buffett = AnaliseFinanceira.analisar("Value Investing", dados_teste)
-        print(f"✅ Score: {resultado_buffett.score}/100")
-        print(f"✅ Recomendação: {resultado_buffett.recomendacao}")
-        print(f"✅ Pontos fortes: {len(resultado_buffett.pontos_fortes)}")
-        print(f"✅ Pontos fracos: {len(resultado_buffett.pontos_fracos)}")
-        if resultado_buffett.preco_alvo:
-            print(f"✅ Preço alvo: R$ {resultado_buffett.preco_alvo:.2f}")
-    except Exception as e:
-        print(f"❌ Erro na análise Buffett: {e}")
-    
-    # Teste 2: Análise Benjamin Graham
-    print("\n🛡️ Teste 2: Análise Benjamin Graham")
-    try:
-        resultado_graham = AnaliseFinanceira.analisar("Defensive Value", dados_teste)
-        print(f"✅ Score: {resultado_graham.score}/100")
-        print(f"✅ Recomendação: {resultado_graham.recomendacao}")
-        if resultado_graham.margem_seguranca:
-            print(f"✅ Margem de segurança: {resultado_graham.margem_seguranca:.1f}%")
-    except Exception as e:
-        print(f"❌ Erro na análise Graham: {e}")
-    
-    # Teste 3: Análise Peter Lynch
-    print("\n📈 Teste 3: Análise Peter Lynch")
-    try:
-        resultado_lynch = AnaliseFinanceira.analisar("Growth at Reasonable Price", dados_teste)
-        print(f"✅ Score: {resultado_lynch.score}/100")
-        print(f"✅ Recomendação: {resultado_lynch.recomendacao}")
-    except Exception as e:
-        print(f"❌ Erro na análise Lynch: {e}")
-    
-    # Teste 4: Análise Dividendos
-    print("\n💰 Teste 4: Análise Dividendos")
-    try:
-        resultado_dividendos = AnaliseFinanceira.analisar("Dividend Investing", dados_teste)
-        print(f"✅ Score: {resultado_dividendos.score}/100")
-        print(f"✅ Recomendação: {resultado_dividendos.recomendacao}")
-    except Exception as e:
-        print(f"❌ Erro na análise Dividendos: {e}")
+
+    # Lista de nomes padronizados das metodologias
+    metodologias = [
+        "warren_buffett",
+        "benjamin_graham",
+        "peter_lynch",
+        "dividendos",
+        "geraldine_weiss",
+        "luiz_barsi_filho",
+        "victor_adler",
+        "john_bogle",
+        "george_soros",
+        "seth_klarman",
+        "lirio_parisotto",
+        "linda_bradford_raschke",
+        "carl_icahn",
+        "jorge_paulo_lemann",
+        "ray_dalio"
+    ]
+    nomes_exibidos = [
+        "Warren Buffett",
+        "Benjamin Graham",
+        "Peter Lynch",
+        "Dividendos (Brasil)",
+        "Geraldine Weiss",
+        "Luiz Barsi Filho",
+        "Victor Adler",
+        "John Bogle",
+        "George Soros",
+        "Seth Klarman",
+        "Lírio Parisotto",
+        "Linda Bradford Raschke",
+        "Carl Icahn",
+        "Jorge Paulo Lemann",
+        "Ray Dalio"
+    ]
+    for nome, exibido in zip(metodologias, nomes_exibidos):
+        print(f"\n🔎 Testando metodologia: {exibido} ({nome})")
+        try:
+            resultado = AnaliseFinanceira.analisar(nome, dados_teste)
+            print(f"✅ Score: {resultado.score}/100")
+            print(f"✅ Recomendação: {resultado.recomendacao}")
+            print(f"✅ Pontos fortes: {len(resultado.pontos_fortes)}")
+            print(f"✅ Pontos fracos: {len(resultado.pontos_fracos)}")
+            if resultado.preco_alvo:
+                print(f"✅ Preço alvo: R$ {resultado.preco_alvo:.2f}")
+            if resultado.margem_seguranca:
+                print(f"✅ Margem de segurança: {resultado.margem_seguranca:.1f}%")
+        except Exception as e:
+            print(f"❌ Erro na análise {exibido}: {e}")
+
+def test_todas_metodologias():
+    from src.models.investidor import METODOLOGIAS_MAP
+    print("\n🔬 Testando TODAS as metodologias disponíveis:")
+    dados_teste = DadosFinanceiros(
+        symbol="TESTE4.SA",
+        price=50.0,
+        market_cap=10000000000,
+        pe_ratio=12.5,
+        pb_ratio=1.2,
+        peg_ratio=0.8,
+        dividend_yield=5.5,
+        roe=18.0,
+        roa=8.5,
+        debt_to_equity=0.3,
+        current_ratio=2.1,
+        free_cash_flow=500000000,
+        revenue_growth=0.12,
+        earnings_growth=0.15,
+        profit_margin=0.12,
+        operating_margin=0.15,
+        book_value_per_share=42.0,
+        earnings_per_share=4.0
+    )
+    for nome, cls in METODOLOGIAS_MAP.items():
+        print(f"\n🔎 Testando metodologia: {nome}")
+        try:
+            resultado = cls.analisar(dados_teste)
+            print(f"✅ Score: {resultado.score}/100")
+            print(f"✅ Recomendação: {resultado.recomendacao}")
+            print(f"✅ Pontos fortes: {len(resultado.pontos_fortes)}")
+            print(f"✅ Pontos fracos: {len(resultado.pontos_fracos)}")
+            if hasattr(resultado, 'margem_seguranca') and resultado.margem_seguranca:
+                print(f"✅ Margem de segurança: {resultado.margem_seguranca:.1f}%")
+        except Exception as e:
+            print(f"❌ Erro na análise {nome}: {e}")
 
 def main():
     """Função principal de teste"""
@@ -231,5 +275,8 @@ def main():
     print("✅ Testes concluídos!")
 
 if __name__ == "__main__":
-    main()
+    test_yahoo_finance_apis()
+    test_worldbank_apis()
+    test_analise_financeira()
+    test_todas_metodologias()
 

@@ -1,7 +1,7 @@
 from src.models.dto import DadosFinanceiros, AnaliseResultado
 
 class ValueInvesting:
-    nome = "Value Investing"
+    nome = "warren_buffett"
     descricao = (
         "Foco em empresas sólidas, vantagem competitiva (moat), "
         "gestão de qualidade, geração de caixa e compra com margem de segurança."
