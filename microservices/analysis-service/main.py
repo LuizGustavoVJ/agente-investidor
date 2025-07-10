@@ -942,3 +942,141 @@ async def shutdown_event():
     logger.info("Shutting down Analysis Service")
     kafka_client.close()
 
+
+# Integração com comunicação entre serviços
+sys.path.append('/app/microservices/shared')
+try:
+    from communication import service_client, validate_user_token, get_stock_data, analyze_stock
+    logger.info("Comunicação entre serviços configurada")
+except ImportError as e:
+    logger.warning(f"Erro ao importar comunicação: {e}")
+    service_client = None
+
+# Middleware para autenticação
+@app.middleware("http")
+async def auth_middleware(request: Request, call_next):
+    """Middleware para validar autenticação em endpoints protegidos"""
+    
+    # Endpoints que não precisam de autenticação
+    public_endpoints = ["/health", "/metrics", "/docs", "/openapi.json"]
+    
+    if request.url.path in public_endpoints:
+        return await call_next(request)
+    
+    # Verificar token de autorização
+    auth_header = request.headers.get("Authorization")
+    if not auth_header or not auth_header.startswith("Bearer "):
+        return JSONResponse(
+            status_code=401,
+            content={"detail": "Token de autorização necessário"}
+        )
+    
+    token = auth_header.split(" ")[1]
+    
+    try:
+        # Validar token com serviço de autenticação
+        if service_client:
+            validation_result = await validate_user_token(token)
+            if not validation_result.get("valid"):
+                return JSONResponse(
+                    status_code=401,
+                    content={"detail": "Token inválido"}
+                )
+            
+            # Adicionar informações do usuário ao request
+            request.state.user_id = validation_result.get("user_id")
+            request.state.user_email = validation_result.get("email")
+        
+    except Exception as e:
+        logger.error(f"Erro na validação do token: {e}")
+        return JSONResponse(
+            status_code=401,
+            content={"detail": "Erro na validação do token"}
+        )
+    
+    return await call_next(request)
+
+# Endpoint para análise completa integrada
+@app.post("/analyze/complete")
+async def analyze_complete(request: CompleteAnalysisRequest):
+    """Análise completa integrada com múltiplas metodologias"""
+    try:
+        # Obter dados da ação via serviço de dados
+        if service_client:
+            stock_data = await get_stock_data(request.symbol)
+        else:
+            stock_data = {"symbol": request.symbol}  # Fallback
+        
+        results = []
+        
+        # Analisar com múltiplas metodologias
+        for methodology in request.methodologies:
+            try:
+                if service_client:
+                    result = await analyze_stock(request.symbol, methodology, stock_data)
+                    results.append(result)
+                else:
+                    # Fallback local
+                    results.append({
+                        "methodology": methodology,
+                        "score": 50,
+                        "recommendation": "NEUTRO",
+                        "message": "Análise local - dados limitados"
+                    })
+            except Exception as e:
+                logger.warning(f"Erro na análise com {methodology}: {e}")
+                results.append({
+                    "methodology": methodology,
+                    "error": str(e)
+                })
+        
+        # Calcular score médio
+        valid_scores = [r.get("score", 0) for r in results if "score" in r]
+        average_score = sum(valid_scores) / len(valid_scores) if valid_scores else 0
+        
+        # Determinar recomendação geral
+        if average_score >= 70:
+            overall_recommendation = "COMPRA"
+        elif average_score >= 40:
+            overall_recommendation = "NEUTRO"
+        else:
+            overall_recommendation = "VENDA"
+        
+        complete_analysis = {
+            "symbol": request.symbol,
+            "timestamp": datetime.utcnow().isoformat(),
+            "overall_score": round(average_score, 2),
+            "overall_recommendation": overall_recommendation,
+            "methodologies_analyzed": len(request.methodologies),
+            "successful_analyses": len(valid_scores),
+            "detailed_results": results,
+            "stock_data": stock_data
+        }
+        
+        # Publicar resultado no Kafka
+        if kafka_producer:
+            await kafka_producer.send_complete_analysis(complete_analysis)
+        
+        return complete_analysis
+        
+    except Exception as e:
+        logger.error(f"Erro na análise completa: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Endpoint para health check de todos os serviços
+@app.get("/health/services")
+async def health_check_services():
+    """Verifica saúde de todos os serviços conectados"""
+    if not service_client:
+        return {"error": "Cliente de serviços não disponível"}
+    
+    try:
+        health_status = await service_client.health_check_all()
+        return {
+            "timestamp": datetime.utcnow().isoformat(),
+            "services": health_status
+        }
+    except Exception as e:
+        logger.error(f"Erro no health check dos serviços: {e}")
+        return {"error": str(e)}
+

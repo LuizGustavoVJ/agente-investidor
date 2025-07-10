@@ -11,3 +11,6 @@ python-multipart==0.0.6
 
 kafka-python==2.0.2
 
+
+httpx==0.25.2
+
