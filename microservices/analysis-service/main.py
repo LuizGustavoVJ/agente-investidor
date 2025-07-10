@@ -28,8 +28,8 @@ import uvicorn
 
 # Imports locais
 from shared.models.dto import (
-    StockData, AnalysisRequest, AnalysisResponse, 
-    FinancialRatios, ValuationMetrics, RiskMetrics
+    DadosFinanceiros, AnaliseRequest, AnaliseResponse, 
+    RecomendacaoEnum
 )
 from shared.cache.advanced_cache import AdvancedCache
 from shared.messaging.kafka_client import KafkaClient
