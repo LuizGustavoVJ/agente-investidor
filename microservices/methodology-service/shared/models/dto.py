@@ -31,6 +31,7 @@ class DadosFinanceiros(BaseModel):
     # Indicadores fundamentalistas
     pe_ratio: Optional[float] = None
     pb_ratio: Optional[float] = None
+    price_to_book: Optional[float] = None  # Alias para pb_ratio
     ps_ratio: Optional[float] = None
     ev_ebitda: Optional[float] = None
     peg_ratio: Optional[float] = None
@@ -39,9 +40,18 @@ class DadosFinanceiros(BaseModel):
     roe: Optional[float] = None
     roa: Optional[float] = None
     roic: Optional[float] = None
+    profit_margin: Optional[float] = None
+    gross_margin: Optional[float] = None
+    operating_margin: Optional[float] = None
+    
+    # Fluxo de caixa
+    free_cash_flow: Optional[float] = None
+    operating_cash_flow: Optional[float] = None
+    fcf_yield: Optional[float] = None
     
     # Endividamento
     debt_to_equity: Optional[float] = None
+    debt_ratio: Optional[float] = None
     current_ratio: Optional[float] = None
     quick_ratio: Optional[float] = None
     

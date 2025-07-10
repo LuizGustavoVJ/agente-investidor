@@ -1,0 +1,2 @@
+# Módulo shared para microserviços
+
