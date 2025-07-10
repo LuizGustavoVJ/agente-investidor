@@ -5,7 +5,7 @@ import json
 from datetime import datetime
 
 try:
-    from models.investidor import MetodologiasInvestimento, TipoInvestidor
+    from models.investidor import METODOLOGIAS_MAP, TipoInvestidor
     from models.analise_financeira import AnaliseFinanceira, DadosFinanceiros, AnaliseResultado
     from data import (
         INVESTIDORES_PERFIS, 
@@ -22,7 +22,7 @@ try:
     from models.acao import Acao, db
     from routes.user import require_oauth
 except ImportError:
-    from src.models.investidor import MetodologiasInvestimento, TipoInvestidor
+    from src.models.investidor import METODOLOGIAS_MAP, TipoInvestidor
     from src.models.analise_financeira import AnaliseFinanceira, DadosFinanceiros, AnaliseResultado
     from src.data import (
         INVESTIDORES_PERFIS, 
@@ -95,7 +95,7 @@ def get_indicadores_por_tipo(tipo):
     """Retorna indicadores específicos para um tipo de investimento"""
     try:
         tipo_enum = TipoInvestidor(tipo)
-        indicadores = MetodologiasInvestimento.get_indicadores_por_tipo(tipo_enum)
+        indicadores = METODOLOGIAS_MAP.get(tipo_enum.name)
         
         return jsonify({
             'success': True,
@@ -255,13 +255,13 @@ def analisar_acao():
             
             # Aplicar metodologia de análise
             if metodologia == 'warren_buffett':
-                resultado = AnaliseFinanceira.analise_warren_buffett(dados_financeiros)
+                resultado = AnaliseFinanceira.analisar("Value Investing", dados_financeiros)
             elif metodologia == 'benjamin_graham':
-                resultado = AnaliseFinanceira.analise_benjamin_graham(dados_financeiros)
+                resultado = AnaliseFinanceira.analisar("Defensive Value", dados_financeiros)
             elif metodologia == 'peter_lynch':
-                resultado = AnaliseFinanceira.analise_peter_lynch(dados_financeiros)
+                resultado = AnaliseFinanceira.analisar("Growth at Reasonable Price", dados_financeiros)
             elif metodologia == 'dividendos':
-                resultado = AnaliseFinanceira.analise_dividendos(dados_financeiros)
+                resultado = AnaliseFinanceira.analisar("Dividend Investing", dados_financeiros)
             else:
                 return jsonify({
                     'success': False,

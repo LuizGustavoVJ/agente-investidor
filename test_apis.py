@@ -8,8 +8,9 @@ import os
 sys.path.append('/opt/.manus/.sandbox-runtime')
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-from data_api import ApiClient
-from src.models.analise_financeira import AnaliseFinanceira, DadosFinanceiros
+from src.data_api import ApiClient
+from src.models.analise_financeira import AnaliseFinanceira
+from src.models.dto import DadosFinanceiros, AnaliseResultado
 
 def test_yahoo_finance_apis():
     """Testa as APIs do Yahoo Finance"""
@@ -175,7 +176,7 @@ def test_analise_financeira():
     # Teste 1: Análise Warren Buffett
     print("\n🎯 Teste 1: Análise Warren Buffett")
     try:
-        resultado_buffett = AnaliseFinanceira.analise_warren_buffett(dados_teste)
+        resultado_buffett = AnaliseFinanceira.analisar("Value Investing", dados_teste)
         print(f"✅ Score: {resultado_buffett.score}/100")
         print(f"✅ Recomendação: {resultado_buffett.recomendacao}")
         print(f"✅ Pontos fortes: {len(resultado_buffett.pontos_fortes)}")
@@ -188,7 +189,7 @@ def test_analise_financeira():
     # Teste 2: Análise Benjamin Graham
     print("\n🛡️ Teste 2: Análise Benjamin Graham")
     try:
-        resultado_graham = AnaliseFinanceira.analise_benjamin_graham(dados_teste)
+        resultado_graham = AnaliseFinanceira.analisar("Defensive Value", dados_teste)
         print(f"✅ Score: {resultado_graham.score}/100")
         print(f"✅ Recomendação: {resultado_graham.recomendacao}")
         if resultado_graham.margem_seguranca:
@@ -199,7 +200,7 @@ def test_analise_financeira():
     # Teste 3: Análise Peter Lynch
     print("\n📈 Teste 3: Análise Peter Lynch")
     try:
-        resultado_lynch = AnaliseFinanceira.analise_peter_lynch(dados_teste)
+        resultado_lynch = AnaliseFinanceira.analisar("Growth at Reasonable Price", dados_teste)
         print(f"✅ Score: {resultado_lynch.score}/100")
         print(f"✅ Recomendação: {resultado_lynch.recomendacao}")
     except Exception as e:
@@ -208,7 +209,7 @@ def test_analise_financeira():
     # Teste 4: Análise Dividendos
     print("\n💰 Teste 4: Análise Dividendos")
     try:
-        resultado_dividendos = AnaliseFinanceira.analise_dividendos(dados_teste)
+        resultado_dividendos = AnaliseFinanceira.analisar("Dividend Investing", dados_teste)
         print(f"✅ Score: {resultado_dividendos.score}/100")
         print(f"✅ Recomendação: {resultado_dividendos.recomendacao}")
     except Exception as e:

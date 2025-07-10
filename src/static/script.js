@@ -25,7 +25,7 @@ function setupLoginForm() {
     const form = document.getElementById('login-form');
     if (!form) return;
     form.onsubmit = async function(e) {
-        e.preventDefault();
+            e.preventDefault();
         const username = document.getElementById('login-username').value.trim();
         const password = document.getElementById('login-password').value;
         const errorMsg = document.getElementById('login-error-msg');
