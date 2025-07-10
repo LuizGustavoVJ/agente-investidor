@@ -17,9 +17,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copiar código
 COPY . .
 
-# Copiar modelos compartilhados
-COPY ../shared /app/microservices/shared
-
 # Criar usuário não-root
 RUN useradd -m -u 1000 analysisuser && chown -R analysisuser:analysisuser /app
 USER analysisuser
