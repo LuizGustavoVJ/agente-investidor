@@ -4,18 +4,20 @@ Responsável por autenticação OAuth 2.0, JWT, registro e login
 """
 
 import os
-import sys
 import uvicorn
 from datetime import datetime, timedelta
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any
 import secrets
-import hashlib
 
 from fastapi import FastAPI, HTTPException, Depends, status, Request
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials, OAuth2PasswordBearer
+from fastapi.security import (
+    HTTPBearer, HTTPAuthorizationCredentials, OAuth2PasswordBearer
+)
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, Boolean, Text
+from sqlalchemy import (
+    create_engine, Column, Integer, String, DateTime, Boolean
+)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from passlib.context import CryptContext
@@ -24,10 +26,7 @@ from authlib.integrations.starlette_client import OAuthError
 from jose import JWTError, jwt
 from pydantic import BaseModel, EmailStr
 import redis
-import json
-import httpx
 import structlog
-from prometheus_client import Counter, Histogram, generate_latest, start_http_server
 import time
 
 # Configuração de logging
@@ -55,8 +54,8 @@ SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-change-in-production")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 REFRESH_TOKEN_EXPIRE_DAYS = 7
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:password@localhost/auth_db")
-REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./test.db")
+REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 
 # OAuth 2.0 Providers
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
@@ -65,10 +64,10 @@ GITHUB_CLIENT_ID = os.getenv("GITHUB_CLIENT_ID", "")
 GITHUB_CLIENT_SECRET = os.getenv("GITHUB_CLIENT_SECRET", "")
 
 # Métricas Prometheus
-REQUEST_COUNT = Counter('auth_requests_total', 'Total requests', ['method', 'endpoint', 'status'])
-REQUEST_DURATION = Histogram('auth_request_duration_seconds', 'Request duration')
-LOGIN_COUNT = Counter('auth_login_total', 'Total logins', ['provider'])
-REGISTRATION_COUNT = Counter('auth_registration_total', 'Total registrations')
+# REQUEST_COUNT = Counter('auth_requests_total', 'Total requests', ['method', 'endpoint', 'status'])
+# REQUEST_DURATION = Histogram('auth_request_duration_seconds', 'Request duration')
+# LOGIN_COUNT = Counter('auth_login_total', 'Total logins', ['provider'])
+# REGISTRATION_COUNT = Counter('auth_registration_total', 'Total registrations')
 
 # Database
 engine = create_engine(DATABASE_URL)
@@ -103,8 +102,9 @@ class User(Base):
     is_active = Column(Boolean, default=True)
     is_verified = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
+    updated_at = Column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+    )
     # OAuth fields
     provider = Column(String, nullable=True)  # google, github, local
     provider_id = Column(String, nullable=True)
@@ -305,13 +305,13 @@ async def metrics_middleware(request: Request, call_next):
     response = await call_next(request)
     duration = time.time() - start_time
     
-    REQUEST_COUNT.labels(
-        method=request.method,
-        endpoint=request.url.path,
-        status=response.status_code
-    ).inc()
+    # REQUEST_COUNT.labels(
+    #     method=request.method,
+    #     endpoint=request.url.path,
+    #     status=response.status_code
+    # ).inc()
     
-    REQUEST_DURATION.observe(duration)
+    # REQUEST_DURATION.observe(duration)
     
     return response
 
@@ -364,7 +364,7 @@ async def register(user: UserCreate, db: Session = Depends(get_db)):
         db.commit()
         db.refresh(db_user)
         
-        REGISTRATION_COUNT.inc()
+        # REGISTRATION_COUNT.inc() # Moved to main.py
         logger.info(f"Usuário registrado: {user.email}")
         
         return UserResponse(
@@ -406,7 +406,7 @@ async def login(user: UserLogin, db: Session = Depends(get_db)):
         access_token = create_access_token(data={"sub": db_user.id})
         refresh_token = create_refresh_token(db_user.id, db)
         
-        LOGIN_COUNT.labels(provider="local").inc()
+        # LOGIN_COUNT.labels(provider="local").inc() # Moved to main.py
         logger.info(f"Login realizado: {user.email}")
         
         return Token(
@@ -577,7 +577,7 @@ async def oauth_callback(provider: str, request: Request, db: Session = Depends(
             db.commit()
             db.refresh(user)
             
-            REGISTRATION_COUNT.inc()
+            # REGISTRATION_COUNT.inc() # Moved to main.py
             logger.info(f"Usuário OAuth criado: {email}")
         
         else:
@@ -591,7 +591,7 @@ async def oauth_callback(provider: str, request: Request, db: Session = Depends(
         access_token = create_access_token(data={"sub": user.id})
         refresh_token = create_refresh_token(user.id, db)
         
-        LOGIN_COUNT.labels(provider=provider).inc()
+        # LOGIN_COUNT.labels(provider=provider).inc() # Moved to main.py
         logger.info(f"Login OAuth realizado: {email}")
         
         # Limpar state usado

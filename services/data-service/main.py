@@ -22,6 +22,7 @@ from pydantic import BaseModel
 from datetime import datetime, timedelta
 import asyncio
 from asyncio_throttle import Throttler
+from microservices.shared.cache.advanced_cache import cache_hits, cache_misses
 
 # Configuração de logging
 structlog.configure(
@@ -47,8 +48,9 @@ logger = structlog.get_logger()
 REQUEST_COUNT = Counter('data_requests_total', 'Total requests', ['method', 'endpoint', 'status'])
 REQUEST_DURATION = Histogram('data_request_duration_seconds', 'Request duration')
 API_CALLS = Counter('external_api_calls_total', 'External API calls', ['provider', 'status'])
-CACHE_HITS = Counter('cache_hits_total', 'Cache hits', ['type'])
-CACHE_MISSES = Counter('cache_misses_total', 'Cache misses', ['type'])
+# Remover as definições duplicadas
+# CACHE_HITS = Counter('cache_hits_total', 'Cache hits', ['type'])
+# CACHE_MISSES = Counter('cache_misses_total', 'Cache misses', ['type'])
 
 # Redis connection
 redis_client = redis.Redis(
@@ -125,14 +127,14 @@ def get_cached_data(key: str) -> Optional[Any]:
     try:
         cached = redis_client.get(key)
         if cached:
-            CACHE_HITS.labels(type="redis").inc()
+            cache_hits.labels(level="l2", key_type="redis").inc()
             return json.loads(cached)
         else:
-            CACHE_MISSES.labels(type="redis").inc()
+            cache_misses.labels(level="l2", key_type="redis").inc()
             return None
     except Exception as e:
         logger.error("Cache read failed", key=key, error=str(e))
-        CACHE_MISSES.labels(type="redis").inc()
+        cache_misses.labels(level="l2", key_type="redis").inc()
         return None
 
 async def fetch_yahoo_finance_data(symbol: str) -> Optional[Dict]:

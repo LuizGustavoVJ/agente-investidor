@@ -1,0 +1,241 @@
+groups:
+  - name: agente-investidor-alerts
+    rules:
+      # Service availability alerts
+      - alert: ServiceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Service {{ $labels.job }} is down"
+          description: "Service {{ $labels.job }} has been down for more than 1 minute."
+
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High error rate on {{ $labels.job }}"
+          description: "Error rate is {{ $value }} errors per second on {{ $labels.job }}."
+
+      # Performance alerts
+      - alert: HighResponseTime
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High response time on {{ $labels.job }}"
+          description: "95th percentile response time is {{ $value }}s on {{ $labels.job }}."
+
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage on {{ $labels.instance }}"
+          description: "CPU usage is {{ $value }}% on {{ $labels.instance }}."
+
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage on {{ $labels.instance }}"
+          description: "Memory usage is {{ $value }}% on {{ $labels.instance }}."
+
+      # Database alerts
+      - alert: PostgreSQLDown
+        expr: pg_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "PostgreSQL is down"
+          description: "PostgreSQL database is down for more than 1 minute."
+
+      - alert: PostgreSQLTooManyConnections
+        expr: sum by (instance) (pg_stat_activity_count) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "PostgreSQL has too many connections"
+          description: "PostgreSQL has {{ $value }} connections on {{ $labels.instance }}."
+
+      - alert: PostgreSQLSlowQueries
+        expr: rate(pg_stat_activity_max_tx_duration[5m]) > 60
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "PostgreSQL has slow queries"
+          description: "PostgreSQL has queries running for more than 60 seconds."
+
+      # Redis alerts
+      - alert: RedisDown
+        expr: redis_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Redis is down"
+          description: "Redis is down for more than 1 minute."
+
+      - alert: RedisHighMemoryUsage
+        expr: redis_memory_used_bytes / redis_memory_max_bytes * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Redis high memory usage"
+          description: "Redis memory usage is {{ $value }}%."
+
+      # Application-specific alerts
+      - alert: HighMethodologyProcessingTime
+        expr: histogram_quantile(0.95, rate(methodology_processing_duration_seconds_bucket[5m])) > 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High methodology processing time"
+          description: "95th percentile methodology processing time is {{ $value }}s."
+
+      - alert: HighAnalysisQueueSize
+        expr: analysis_queue_size > 100
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High analysis queue size"
+          description: "Analysis queue has {{ $value }} pending items."
+
+      - alert: LowCacheHitRate
+        expr: rate(cache_hits_total[5m]) / rate(cache_requests_total[5m]) < 0.8
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Low cache hit rate"
+          description: "Cache hit rate is {{ $value }} which is below 80%."
+
+      # Business metrics alerts
+      - alert: LowUserRegistrations
+        expr: rate(user_registrations_total[1h]) < 1
+        for: 1h
+        labels:
+          severity: info
+        annotations:
+          summary: "Low user registration rate"
+          description: "User registration rate is {{ $value }} per hour."
+
+      - alert: HighUserChurn
+        expr: rate(user_deletions_total[24h]) / rate(user_registrations_total[24h]) > 0.1
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: "High user churn rate"
+          description: "User churn rate is {{ $value }} which is above 10%."
+
+      # Infrastructure alerts
+      - alert: DiskSpaceRunningOut
+        expr: (node_filesystem_avail_bytes / node_filesystem_size_bytes) * 100 < 10
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Disk space running out on {{ $labels.instance }}"
+          description: "Disk space is {{ $value }}% full on {{ $labels.instance }}."
+
+      - alert: HighDiskIOWait
+        expr: rate(node_cpu_seconds_total{mode="iowait"}[5m]) * 100 > 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High disk I/O wait on {{ $labels.instance }}"
+          description: "Disk I/O wait is {{ $value }}% on {{ $labels.instance }}."
+
+      # Container alerts
+      - alert: ContainerKilled
+        expr: increase(container_tasks_state{state="killed"}[5m]) > 0
+        for: 0m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container killed on {{ $labels.instance }}"
+          description: "A container was killed on {{ $labels.instance }}."
+
+      - alert: ContainerHighCPUUsage
+        expr: (rate(container_cpu_usage_seconds_total[5m]) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container high CPU usage"
+          description: "Container {{ $labels.name }} CPU usage is {{ $value }}%."
+
+      - alert: ContainerHighMemoryUsage
+        expr: (container_memory_usage_bytes / container_spec_memory_limit_bytes) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container high memory usage"
+          description: "Container {{ $labels.name }} memory usage is {{ $value }}%."
+
+  - name: agente-investidor-business-alerts
+    rules:
+      # API rate limiting alerts
+      - alert: APIRateLimitExceeded
+        expr: rate(api_rate_limit_exceeded_total[5m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "API rate limit exceeded"
+          description: "API rate limit exceeded {{ $value }} times per second."
+
+      # Data quality alerts
+      - alert: StaleStockData
+        expr: time() - stock_data_last_update_timestamp > 3600
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Stale stock data"
+          description: "Stock data hasn't been updated for more than 1 hour."
+
+      - alert: HighDataIngestionErrors
+        expr: rate(data_ingestion_errors_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High data ingestion error rate"
+          description: "Data ingestion error rate is {{ $value }} errors per second."
+
+      # Security alerts
+      - alert: HighFailedLoginAttempts
+        expr: rate(failed_login_attempts_total[5m]) > 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High failed login attempts"
+          description: "Failed login attempts rate is {{ $value }} per second."
+
+      - alert: SuspiciousUserActivity
+        expr: rate(suspicious_activity_total[5m]) > 1
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Suspicious user activity detected"
+          description: "Suspicious activity rate is {{ $value }} events per second."
+

@@ -1,0 +1,194 @@
+name: Continuous Deployment
+
+on:
+  push:
+    branches: [ master ]
+    tags: [ 'v*' ]
+  workflow_run:
+    workflows: ["Continuous Integration"]
+    types:
+      - completed
+    branches: [ master ]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  deploy-staging:
+    if: github.ref == 'refs/heads/master' && github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    environment: staging
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'v1.28.0'
+    
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
+    
+    - name: Update kubeconfig
+      run: |
+        aws eks update-kubeconfig --region us-east-1 --name agente-investidor-staging
+    
+    - name: Deploy to staging
+      run: |
+        # Apply Kubernetes manifests
+        kubectl apply -f k8s/staging/ -n agente-investidor-staging
+        
+        # Update image tags
+        kubectl set image deployment/auth-service auth-service=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/auth-service:${{ github.sha }} -n agente-investidor-staging
+        kubectl set image deployment/data-service data-service=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/data-service:${{ github.sha }} -n agente-investidor-staging
+        kubectl set image deployment/methodology-service methodology-service=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/methodology-service:${{ github.sha }} -n agente-investidor-staging
+        kubectl set image deployment/analysis-service analysis-service=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/analysis-service:${{ github.sha }} -n agente-investidor-staging
+        
+        # Wait for rollout
+        kubectl rollout status deployment/auth-service -n agente-investidor-staging --timeout=300s
+        kubectl rollout status deployment/data-service -n agente-investidor-staging --timeout=300s
+        kubectl rollout status deployment/methodology-service -n agente-investidor-staging --timeout=300s
+        kubectl rollout status deployment/analysis-service -n agente-investidor-staging --timeout=300s
+    
+    - name: Run smoke tests
+      run: |
+        # Wait for services to be ready
+        sleep 60
+        
+        # Get staging URL
+        STAGING_URL=$(kubectl get ingress agente-investidor-ingress -n agente-investidor-staging -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+        
+        # Run smoke tests
+        curl -f http://$STAGING_URL/health || exit 1
+        curl -f http://$STAGING_URL/api/v1/auth/health || exit 1
+        curl -f http://$STAGING_URL/api/v1/data/health || exit 1
+        curl -f http://$STAGING_URL/api/v1/methodology/health || exit 1
+        curl -f http://$STAGING_URL/api/v1/analysis/health || exit 1
+    
+    - name: Notify deployment success
+      uses: 8398a7/action-slack@v3
+      with:
+        status: success
+        text: "✅ Staging deployment successful! Version: ${{ github.sha }}"
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  deploy-production:
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    environment: production
+    needs: deploy-staging
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'v1.28.0'
+    
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
+    
+    - name: Update kubeconfig
+      run: |
+        aws eks update-kubeconfig --region us-east-1 --name agente-investidor-production
+    
+    - name: Create backup
+      run: |
+        # Backup current deployment
+        kubectl get deployment -n agente-investidor-production -o yaml > backup-deployment-$(date +%Y%m%d-%H%M%S).yaml
+        
+        # Backup database
+        kubectl exec -n agente-investidor-production deployment/postgresql -- pg_dump -U postgres agente_investidor > backup-db-$(date +%Y%m%d-%H%M%S).sql
+    
+    - name: Deploy to production
+      run: |
+        # Apply Kubernetes manifests
+        kubectl apply -f k8s/production/ -n agente-investidor-production
+        
+        # Update image tags with release version
+        RELEASE_VERSION=${GITHUB_REF#refs/tags/}
+        kubectl set image deployment/auth-service auth-service=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/auth-service:$RELEASE_VERSION -n agente-investidor-production
+        kubectl set image deployment/data-service data-service=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/data-service:$RELEASE_VERSION -n agente-investidor-production
+        kubectl set image deployment/methodology-service methodology-service=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/methodology-service:$RELEASE_VERSION -n agente-investidor-production
+        kubectl set image deployment/analysis-service analysis-service=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/analysis-service:$RELEASE_VERSION -n agente-investidor-production
+        
+        # Rolling update with zero downtime
+        kubectl rollout status deployment/auth-service -n agente-investidor-production --timeout=600s
+        kubectl rollout status deployment/data-service -n agente-investidor-production --timeout=600s
+        kubectl rollout status deployment/methodology-service -n agente-investidor-production --timeout=600s
+        kubectl rollout status deployment/analysis-service -n agente-investidor-production --timeout=600s
+    
+    - name: Run production health checks
+      run: |
+        # Wait for services to stabilize
+        sleep 120
+        
+        # Get production URL
+        PROD_URL=$(kubectl get ingress agente-investidor-ingress -n agente-investidor-production -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+        
+        # Comprehensive health checks
+        curl -f https://$PROD_URL/health || exit 1
+        curl -f https://$PROD_URL/api/v1/auth/health || exit 1
+        curl -f https://$PROD_URL/api/v1/data/health || exit 1
+        curl -f https://$PROD_URL/api/v1/methodology/health || exit 1
+        curl -f https://$PROD_URL/api/v1/analysis/health || exit 1
+        
+        # Test critical user journeys
+        python tests/production/critical-path-tests.py --url https://$PROD_URL
+    
+    - name: Update monitoring dashboards
+      run: |
+        # Update Grafana dashboards with new version
+        curl -X POST \
+          -H "Authorization: Bearer ${{ secrets.GRAFANA_API_KEY }}" \
+          -H "Content-Type: application/json" \
+          -d '{"dashboard": {"version": "'${GITHUB_REF#refs/tags/}'", "tags": ["production", "release"]}}' \
+          https://grafana.agenteinvestidor.com/api/dashboards/db
+    
+    - name: Notify production deployment
+      uses: 8398a7/action-slack@v3
+      with:
+        status: success
+        text: "🚀 Production deployment successful! Version: ${GITHUB_REF#refs/tags/} is now live!"
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  rollback:
+    if: failure()
+    runs-on: ubuntu-latest
+    environment: production
+    
+    steps:
+    - name: Rollback production deployment
+      run: |
+        kubectl rollout undo deployment/auth-service -n agente-investidor-production
+        kubectl rollout undo deployment/data-service -n agente-investidor-production
+        kubectl rollout undo deployment/methodology-service -n agente-investidor-production
+        kubectl rollout undo deployment/analysis-service -n agente-investidor-production
+        
+        # Wait for rollback to complete
+        kubectl rollout status deployment/auth-service -n agente-investidor-production
+        kubectl rollout status deployment/data-service -n agente-investidor-production
+        kubectl rollout status deployment/methodology-service -n agente-investidor-production
+        kubectl rollout status deployment/analysis-service -n agente-investidor-production
+    
+    - name: Notify rollback
+      uses: 8398a7/action-slack@v3
+      with:
+        status: failure
+        text: "⚠️ Production deployment failed and was rolled back!"
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
