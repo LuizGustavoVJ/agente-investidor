@@ -70,6 +70,31 @@ services:
     restart: unless-stopped
 
   # Microserviços
+  auth-service:
+    build:
+      context: ./services/auth-service
+      dockerfile: Dockerfile
+    container_name: auth-service
+    depends_on:
+      - postgres
+      - redis
+    ports:
+      - "8001:8001"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres123@postgres:5432/agente_investidor
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - JWT_SECRET_KEY=your-secret-key-here
+      - SERVICE_NAME=auth-service
+    networks:
+      - agente-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
   methodology-service:
     build:
       context: ./microservices/methodology-service
@@ -142,11 +167,12 @@ services:
     image: nginx:alpine
     container_name: nginx-gateway
     depends_on:
+      - auth-service
       - methodology-service
       - analysis-service
       - data-service
     ports:
-      - "8001:80"
+      - "8000:80"
     volumes:
       - ./infrastructure/nginx/nginx.conf:/etc/nginx/nginx.conf
     networks:
