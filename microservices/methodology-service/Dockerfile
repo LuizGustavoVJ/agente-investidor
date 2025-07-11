@@ -30,3 +30,5 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
 # Comando para iniciar
 CMD ["python", "main.py"]
 
+ENV PYTHONPATH="${PYTHONPATH}:/app:/app/microservices"
+

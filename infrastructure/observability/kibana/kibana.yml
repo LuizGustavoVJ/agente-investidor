@@ -21,7 +21,7 @@ logging.appenders.file.layout.type: json
 logging.root.level: info
 
 # UI Settings
-server.basePath: ""
+#server.basePath: ""
 server.rewriteBasePath: false
 
 # Index patterns
