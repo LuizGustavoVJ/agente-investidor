@@ -512,7 +512,7 @@ METODOLOGIAS = {
 # Integração com Kafka
 sys.path.append('/app/microservices/shared')
 try:
-    from messaging.kafka_client import KafkaProducer
+    from shared.messaging.kafka_client import KafkaProducer
     kafka_producer = KafkaProducer()
     logger.info("Kafka producer inicializado")
 except Exception as e:
@@ -1770,7 +1770,7 @@ METODOLOGIAS = {
 
 # Integração com Kafka
 sys.path.append('/app/microservices/shared')
-from messaging import Topics, MessageSchemas, send_message, consume_messages
+from shared.messaging import Topics, MessageSchemas, send_message, consume_messages
 import threading
 
 # Consumer para processar análises assíncronas
@@ -2298,7 +2298,7 @@ class MacroTrading:
 # Integração com comunicação entre serviços
 sys.path.append('/app/microservices/shared')
 try:
-    from communication import service_client, validate_user_token, get_stock_data
+    from shared.communication import service_client, validate_user_token, get_stock_data
     logger.info("Comunicação entre serviços configurada")
 except ImportError as e:
     logger.warning(f"Erro ao importar comunicação: {e}")

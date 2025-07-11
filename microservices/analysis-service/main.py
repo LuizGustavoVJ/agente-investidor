@@ -25,7 +25,7 @@ from pydantic import BaseModel, Field
 sys.path.append('/app')
 sys.path.append('/app/microservices/shared')
 
-from models.dto import DadosFinanceiros
+from shared.models.dto import DadosFinanceiros
 
 # Configuração de logging
 structlog.configure(
@@ -768,7 +768,7 @@ if __name__ == "__main__":
 
 # Integração com Kafka
 sys.path.append('/app/microservices/shared')
-from messaging import Topics, MessageSchemas, send_message, consume_messages
+from shared.messaging import Topics, MessageSchemas, send_message, consume_messages
 import threading
 
 # Consumer para processar análises assíncronas
@@ -946,7 +946,7 @@ async def shutdown_event():
 # Integração com comunicação entre serviços
 sys.path.append('/app/microservices/shared')
 try:
-    from communication import service_client, validate_user_token, get_stock_data, analyze_stock
+    from shared.communication import service_client, validate_user_token, get_stock_data, analyze_stock
     logger.info("Comunicação entre serviços configurada")
 except ImportError as e:
     logger.warning(f"Erro ao importar comunicação: {e}")
