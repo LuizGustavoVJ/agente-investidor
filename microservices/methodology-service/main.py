@@ -22,7 +22,7 @@ from datetime import datetime
 sys.path.append('/app')
 sys.path.append('/app/microservices/shared')
 
-from models.dto import (
+from shared.models.dto import (
     DadosFinanceiros, AnaliseResultado, MetodologiaInfo,
     AnaliseRequest, AnaliseResponse, ComparacaoRequest, ComparacaoResponse,
     RecomendacaoEnum
