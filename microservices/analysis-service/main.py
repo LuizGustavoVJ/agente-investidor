@@ -6,8 +6,9 @@ Responsável por calcular indicadores fundamentalistas e análises técnicas
 import os
 import sys
 import uvicorn
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from prometheus_client import Counter, Histogram, generate_latest
 from prometheus_client import start_http_server
 import structlog
@@ -997,6 +998,10 @@ async def auth_middleware(request: Request, call_next):
     return await call_next(request)
 
 # Endpoint para análise completa integrada
+class CompleteAnalysisRequest(BaseModel):
+    symbol: str
+    methodologies: List[str]
+
 @app.post("/analyze/complete")
 async def analyze_complete(request: CompleteAnalysisRequest):
     """Análise completa integrada com múltiplas metodologias"""
