@@ -28,6 +28,7 @@ from pydantic import BaseModel, EmailStr
 import redis
 import structlog
 import time
+from prometheus_client import generate_latest, start_http_server
 
 # Configuração de logging
 structlog.configure(
