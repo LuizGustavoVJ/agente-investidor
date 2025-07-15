@@ -9,6 +9,7 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  PYTHONPATH: ${{ github.workspace }}:${{ github.workspace }}/microservices:${{ github.workspace }}/services
 
 jobs:
   test:
@@ -203,7 +204,7 @@ jobs:
         docker-compose -f docker-compose.fase2.yml down
     
     - name: Upload performance results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: performance-test-results
         path: performance-results/
