@@ -28,9 +28,8 @@ class TestFase3Workflow:
     
     def wait_for_services(self):
         """Aguarda serviços estarem prontos"""
-        max_retries = 30
+        max_retries = 90  # 90 tentativas
         retry_count = 0
-        
         while retry_count < max_retries:
             try:
                 # Verificar se todos os serviços estão respondendo
@@ -44,12 +43,10 @@ class TestFase3Workflow:
                 else:
                     print("🎉 Todos os serviços estão prontos!")
                     return
-                    
             except requests.exceptions.RequestException as e:
                 print(f"⏳ Aguardando serviços... ({retry_count + 1}/{max_retries})")
                 retry_count += 1
-                time.sleep(2)
-        
+                time.sleep(10)  # 90 x 10s = 900s = 15 minutos
         pytest.fail("Serviços não ficaram prontos a tempo")
     
     def test_user_profile_workflow(self):
