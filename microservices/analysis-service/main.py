@@ -21,6 +21,7 @@ import pandas as pd
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timedelta
 from pydantic import BaseModel, Field
+import asyncio
 
 # Adicionar path para importar módulos compartilhados
 sys.path.append('/app')
@@ -941,7 +942,7 @@ async def startup_event():
 async def shutdown_event():
     """Eventos de encerramento"""
     logger.info("Shutting down Analysis Service")
-    kafka_client.close()
+    # kafka_client.close() # This line was removed as kafka_client is not defined
 
 
 # Integração com comunicação entre serviços
@@ -1059,8 +1060,8 @@ async def analyze_complete(request: CompleteAnalysisRequest):
         }
         
         # Publicar resultado no Kafka
-        if kafka_producer:
-            await kafka_producer.send_complete_analysis(complete_analysis)
+        # if kafka_producer: # kafka_producer is not defined
+        #     await kafka_producer.send_complete_analysis(complete_analysis)
         
         return complete_analysis
         
