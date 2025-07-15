@@ -52,13 +52,25 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 REFRESH_TOKEN_EXPIRE_DAYS = 7
 
-# Redis connection
-redis_client = redis.Redis(
-    host=os.getenv("REDIS_HOST", "redis"),
-    port=int(os.getenv("REDIS_PORT", "6379")),
-    db=0,
-    decode_responses=True
-)
+# Redis connection with retry logic
+def get_redis_client():
+    try:
+        client = redis.Redis(
+            host=os.getenv("REDIS_HOST", "redis"),
+            port=int(os.getenv("REDIS_PORT", "6379")),
+            db=0,
+            decode_responses=True,
+            socket_connect_timeout=5,
+            socket_timeout=5,
+            retry_on_timeout=True
+        )
+        client.ping()
+        return client
+    except Exception as e:
+        logger.warning(f"Redis connection failed: {e}")
+        return None
+
+redis_client = get_redis_client()
 
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -369,10 +381,9 @@ if __name__ == "__main__":
     
     # Iniciar aplicação
     uvicorn.run(
-        "main:app",
+        app,
         host="0.0.0.0",
         port=8001,
-        reload=True,
         log_config=None  # Usar structlog
     )
 

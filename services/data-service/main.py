@@ -22,7 +22,16 @@ from pydantic import BaseModel
 from datetime import datetime, timedelta
 import asyncio
 from asyncio_throttle import Throttler
-from microservices.shared.cache.advanced_cache import cache_hits, cache_misses
+import sys
+sys.path.append('/app/microservices')
+# Importações de cache (com fallback se não disponível)
+try:
+    from shared.cache.advanced_cache import cache_hits, cache_misses
+except ImportError:
+    # Fallback se o módulo não estiver disponível
+    from prometheus_client import Counter
+    cache_hits = Counter('data_cache_hits_total', 'Cache hits', ['level', 'key_type'])
+    cache_misses = Counter('data_cache_misses_total', 'Cache misses', ['level', 'key_type'])
 
 # Configuração de logging
 structlog.configure(
@@ -52,13 +61,25 @@ API_CALLS = Counter('external_api_calls_total', 'External API calls', ['provider
 # CACHE_HITS = Counter('cache_hits_total', 'Cache hits', ['type'])
 # CACHE_MISSES = Counter('cache_misses_total', 'Cache misses', ['type'])
 
-# Redis connection
-redis_client = redis.Redis(
-    host=os.getenv("REDIS_HOST", "redis"),
-    port=int(os.getenv("REDIS_PORT", "6379")),
-    db=1,  # DB diferente do auth service
-    decode_responses=True
-)
+# Redis connection with retry logic
+def get_redis_client():
+    try:
+        client = redis.Redis(
+            host=os.getenv("REDIS_HOST", "redis"),
+            port=int(os.getenv("REDIS_PORT", "6379")),
+            db=1,  # DB diferente do auth service
+            decode_responses=True,
+            socket_connect_timeout=5,
+            socket_timeout=5,
+            retry_on_timeout=True
+        )
+        client.ping()
+        return client
+    except Exception as e:
+        logger.warning(f"Redis connection failed: {e}")
+        return None
+
+redis_client = get_redis_client()
 
 # Rate limiting
 throttler = Throttler(rate_limit=100, period=60)  # 100 requests per minute
