@@ -24,5 +24,9 @@ EXPOSE 8007
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8007/health || exit 1
 
+# Criar grupo e usuário não-root
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+USER appuser
+
 # Comando para executar a aplicação
 CMD ["python", "main.py"] 

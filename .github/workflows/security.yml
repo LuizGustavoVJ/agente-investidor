@@ -1,5 +1,10 @@
 name: Security Scanning
 
+permissions:
+  actions: read
+  contents: read
+  security-events: write
+
 on:
   push:
     branches: [ master, develop ]
@@ -35,7 +40,7 @@ jobs:
         find . -name "requirements.txt" -exec pip-audit -r {} \; || true
     
     - name: Upload dependency scan results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: dependency-scan-results
         path: |
@@ -67,7 +72,7 @@ jobs:
         semgrep --config=auto --json --output=semgrep-report.json . || true
     
     - name: Upload code security scan results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: code-security-scan-results
         path: |
@@ -102,7 +107,7 @@ jobs:
         output: 'trivy-${{ matrix.service }}.sarif'
     
     - name: Upload Trivy scan results
-      uses: github/codeql-action/upload-sarif@v2
+      uses: github/codeql-action/upload-sarif@v3
       with:
         sarif_file: 'trivy-${{ matrix.service }}.sarif'
     
@@ -157,7 +162,7 @@ jobs:
         output_file_path: checkov-report.sarif
     
     - name: Upload Checkov scan results
-      uses: github/codeql-action/upload-sarif@v2
+      uses: github/codeql-action/upload-sarif@v3
       with:
         sarif_file: checkov-report.sarif
     
@@ -187,7 +192,7 @@ jobs:
           --nvdApiKey ${{ secrets.NVD_API_KEY }}
     
     - name: Upload OWASP Dependency Check results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: dependency-check-report
         path: reports/
@@ -217,7 +222,7 @@ jobs:
     
     steps:
     - name: Download all artifacts
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
     
     - name: Generate security report
       run: |
@@ -241,7 +246,7 @@ jobs:
         echo "4. Monitor security advisories for used packages" >> security-report.md
     
     - name: Upload security report
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: security-report
         path: security-report.md
